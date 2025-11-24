@@ -1,0 +1,25 @@
+[project]
+name = "uv-navigation-inspection"
+version = "0.1.0"
+description = "紫外导航算法与仿真数据误差分析 Streamlit 应用"
+authors = ["You <you@example.com>"]
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "Proprietary"}
+keywords = ["uv", "streamlit", "navigation", "analysis"]
+
+dependencies = [
+    "streamlit>=1.38",
+    "pandas>=2.0",
+    "numpy>=1.24",
+    "plotly>=5.20",
+    "json5>=0.9"
+]
+
+[[tool.uv.index]]
+name = "ustc"
+url = "https://pypi.mirrors.ustc.edu.cn/simple/"
+
+[tool.uv.sources]
+# 示例: pandas = { url = "https://pypi.org/simple" }
+
