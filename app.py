@@ -126,55 +126,55 @@ def main():
                 fig1 = plot_comparison(df, 'timestamp', 'gt_distance', 'algo_distance', 
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)', 
                                      '理论值与实际值距离对比', '距离 (m)')
-                st.plotly_chart(fig1, use_container_width=True, config={'scrollZoom': False})
+                st.plotly_chart(fig1, width='stretch', config={'scrollZoom': False})
                 
                 fig2 = plot_error(df, 'timestamp', 'distance_error', 
                                 '距离误差（实际值 - 理论值）', '误差 (m)', bounds=(dist_lower, dist_upper))
-                st.plotly_chart(fig2, use_container_width=True, config={'scrollZoom': False})
+                st.plotly_chart(fig2, width='stretch', config={'scrollZoom': False})
                 
             with tab2:
                 st.subheader("侧向位置分析")
                 fig3 = plot_comparison(df, 'timestamp', 'gt_lateral', 'algo_lateral',
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)',
                                      '理论值与实际值侧向对比', '侧向距离 (m)')
-                st.plotly_chart(fig3, use_container_width=True, config={'scrollZoom': False})
+                st.plotly_chart(fig3, width='stretch', config={'scrollZoom': False})
                 
                 fig4 = plot_error(df, 'timestamp', 'lateral_error',
                                 '侧向误差（实际值 - 理论值）', '误差 (m)', bounds=(lat_lower, lat_upper))
-                st.plotly_chart(fig4, use_container_width=True, config={'scrollZoom': False})
+                st.plotly_chart(fig4, width='stretch', config={'scrollZoom': False})
                 
             with tab3:
                 st.subheader("纵向位置分析")
                 fig5 = plot_comparison(df, 'timestamp', 'gt_longitudinal', 'algo_longitudinal',
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)',
                                      '理论值与实际值纵向对比', '纵向距离 (m)')
-                st.plotly_chart(fig5, use_container_width=True, config={'scrollZoom': False})
+                st.plotly_chart(fig5, width='stretch', config={'scrollZoom': False})
                 
                 fig6 = plot_error(df, 'timestamp', 'longitudinal_error',
                                 '纵向误差（实际值 - 理论值）', '误差 (m)', bounds=(lon_lower, lon_upper))
-                st.plotly_chart(fig6, use_container_width=True, config={'scrollZoom': False})
+                st.plotly_chart(fig6, width='stretch', config={'scrollZoom': False})
                 
             with tab4:
                 st.subheader("高度分析")
                 fig7 = plot_comparison(df, 'timestamp', 'gt_height', 'algo_height',
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)',
                                      '理论值与实际值高度对比', '高度 (m)')
-                st.plotly_chart(fig7, use_container_width=True, config={'scrollZoom': False})
+                st.plotly_chart(fig7, width='stretch', config={'scrollZoom': False})
                 
                 fig8 = plot_error(df, 'timestamp', 'height_error',
                                 '高度误差（实际值 - 理论值）', '误差 (m)', bounds=(height_lower, height_upper))
-                st.plotly_chart(fig8, use_container_width=True, config={'scrollZoom': False})
+                st.plotly_chart(fig8, width='stretch', config={'scrollZoom': False})
                 
             with tab5:
                 st.subheader("航向分析")
                 fig9 = plot_comparison(df, 'timestamp', 'gt_heading', 'algo_heading',
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)',
                                      '理论值与实际值航向对比', '航向 (rad)')
-                st.plotly_chart(fig9, use_container_width=True, config={'scrollZoom': False})
+                st.plotly_chart(fig9, width='stretch', config={'scrollZoom': False})
                 
                 fig10 = plot_error(df, 'timestamp', 'heading_error',
                                  '航向误差（实际值 - 理论值）', '误差 (deg)', bounds=(heading_lower, heading_upper))
-                st.plotly_chart(fig10, use_container_width=True, config={'scrollZoom': False})
+                st.plotly_chart(fig10, width='stretch', config={'scrollZoom': False})
 
         except Exception as e:
             st.error(f"处理文件时出错: {e}")

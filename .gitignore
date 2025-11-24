@@ -3,3 +3,10 @@
 streamlit.log
 data/
 uv.lock
+dist/
+build/
+*.spec
+*.egg-info/
+.eggs/
+*.pyc
+*.pyo
