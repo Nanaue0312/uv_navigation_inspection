@@ -107,16 +107,36 @@ def main():
             
             # Display additional statistics
             with st.expander("📊 详细统计信息"):
+                st.markdown("##### 📌 计算方式说明")
+                st.info("""
+                **RMSE (均方根误差)**: 衡量误差大小的指标，公式为 √(Σ(误差²)/N)  
+                **平均置信度**: 算法输出置信度的平均值 (0-1之间)  
+                **收敛时间**: 误差收敛到稳态阈值所需的时间  
+                """)
+                
                 st.subheader("算法性能")
-                st.text(f"平均置信度: {algo_perf.get('average_confidence', 0):.3f}")
-                st.text(f"平均处理时间: {algo_perf.get('average_processing_time_ms', 0):.2f} ms")
-                st.text(f"最大处理时间: {algo_perf.get('max_processing_time_ms', 0):.2f} ms")
+                st.markdown("""
+                - **平均置信度**: `{:.3f}` - 算法对其输出结果的平均信心程度，范围0-1，越接近1表示算法越确信其结果准确
+                - **平均处理时间**: `{:.2f} ms` - 算法处理单帧数据所需的平均时间，反映算法的实时性能
+                - **最大处理时间**: `{:.2f} ms` - 算法处理单帧数据的最长耗时，用于评估最坏情况下的性能
+                """.format(
+                    algo_perf.get('average_confidence', 0),
+                    algo_perf.get('average_processing_time_ms', 0),
+                    algo_perf.get('max_processing_time_ms', 0)
+                ))
                 
                 st.subheader("收敛指标")
-                st.text(f"初始距离误差: {conv_metrics.get('initial_distance_error', 0):.2f} m")
-                st.text(f"最终距离误差: {conv_metrics.get('final_distance_error', 0):.2f} m")
-                st.text(f"收敛时间: {conv_metrics.get('convergence_time_s', 0):.2f} s")
-                st.text(f"稳态误差: {conv_metrics.get('steady_state_error', 0):.2f} m")
+                st.markdown("""
+                - **初始距离误差**: `{:.2f} m` - 仿真开始时算法输出与真实值之间的距离误差
+                - **最终距离误差**: `{:.2f} m` - 仿真结束时算法输出与真实值之间的距离误差
+                - **收敛时间**: `{:.2f} s` - 算法从初始状态收敛到稳定状态所需的时间
+                - **稳态误差**: `{:.2f} m` - 算法收敛后在稳定状态下的平均误差水平
+                """.format(
+                    conv_metrics.get('initial_distance_error', 0),
+                    conv_metrics.get('final_distance_error', 0),
+                    conv_metrics.get('convergence_time_s', 0),
+                    conv_metrics.get('steady_state_error', 0)
+                ))
             
             # Tabs for analysis
             tab1, tab2, tab3, tab4, tab5 = st.tabs(["距离分析", "侧向分析", "纵向分析", "高度分析", "航向分析"])
@@ -132,6 +152,18 @@ def main():
                                 '距离误差（实际值 - 理论值）', '误差 (m)', bounds=(dist_lower, dist_upper))
                 st.plotly_chart(fig2, width='stretch', config={'scrollZoom': False})
                 
+                # 统计指标显示
+                st.markdown("#### 📊 误差统计指标")
+                dist_errors = df['distance_error'].dropna()
+                stat_col1, stat_col2, stat_col3 = st.columns(3)
+                with stat_col1:
+                    st.metric("最大误差", f"{dist_errors.max():.4f} m")
+                with stat_col2:
+                    st.metric("最小误差", f"{dist_errors.min():.4f} m")
+                with stat_col3:
+                    rms = np.sqrt((dist_errors**2).mean())
+                    st.metric("RMS (均方根误差)", f"{rms:.4f} m")
+                
             with tab2:
                 st.subheader("侧向位置分析")
                 fig3 = plot_comparison(df, 'timestamp', 'gt_lateral', 'algo_lateral',
@@ -142,6 +174,18 @@ def main():
                 fig4 = plot_error(df, 'timestamp', 'lateral_error',
                                 '侧向误差（实际值 - 理论值）', '误差 (m)', bounds=(lat_lower, lat_upper))
                 st.plotly_chart(fig4, width='stretch', config={'scrollZoom': False})
+                
+                # 统计指标显示
+                st.markdown("#### 📊 误差统计指标")
+                lat_errors = df['lateral_error'].dropna()
+                stat_col1, stat_col2, stat_col3 = st.columns(3)
+                with stat_col1:
+                    st.metric("最大误差", f"{lat_errors.max():.4f} m")
+                with stat_col2:
+                    st.metric("最小误差", f"{lat_errors.min():.4f} m")
+                with stat_col3:
+                    rms = np.sqrt((lat_errors**2).mean())
+                    st.metric("RMS (均方根误差)", f"{rms:.4f} m")
                 
             with tab3:
                 st.subheader("纵向位置分析")
@@ -154,6 +198,18 @@ def main():
                                 '纵向误差（实际值 - 理论值）', '误差 (m)', bounds=(lon_lower, lon_upper))
                 st.plotly_chart(fig6, width='stretch', config={'scrollZoom': False})
                 
+                # 统计指标显示
+                st.markdown("#### 📊 误差统计指标")
+                lon_errors = df['longitudinal_error'].dropna()
+                stat_col1, stat_col2, stat_col3 = st.columns(3)
+                with stat_col1:
+                    st.metric("最大误差", f"{lon_errors.max():.4f} m")
+                with stat_col2:
+                    st.metric("最小误差", f"{lon_errors.min():.4f} m")
+                with stat_col3:
+                    rms = np.sqrt((lon_errors**2).mean())
+                    st.metric("RMS (均方根误差)", f"{rms:.4f} m")
+                
             with tab4:
                 st.subheader("高度分析")
                 fig7 = plot_comparison(df, 'timestamp', 'gt_height', 'algo_height',
@@ -165,6 +221,18 @@ def main():
                                 '高度误差（实际值 - 理论值）', '误差 (m)', bounds=(height_lower, height_upper))
                 st.plotly_chart(fig8, width='stretch', config={'scrollZoom': False})
                 
+                # 统计指标显示
+                st.markdown("#### 📊 误差统计指标")
+                height_errors = df['height_error'].dropna()
+                stat_col1, stat_col2, stat_col3 = st.columns(3)
+                with stat_col1:
+                    st.metric("最大误差", f"{height_errors.max():.4f} m")
+                with stat_col2:
+                    st.metric("最小误差", f"{height_errors.min():.4f} m")
+                with stat_col3:
+                    rms = np.sqrt((height_errors**2).mean())
+                    st.metric("RMS (均方根误差)", f"{rms:.4f} m")
+                
             with tab5:
                 st.subheader("航向分析")
                 fig9 = plot_comparison(df, 'timestamp', 'gt_heading', 'algo_heading',
@@ -175,6 +243,18 @@ def main():
                 fig10 = plot_error(df, 'timestamp', 'heading_error',
                                  '航向误差（实际值 - 理论值）', '误差 (deg)', bounds=(heading_lower, heading_upper))
                 st.plotly_chart(fig10, width='stretch', config={'scrollZoom': False})
+                
+                # 统计指标显示
+                st.markdown("#### 📊 误差统计指标")
+                heading_errors = df['heading_error'].dropna()
+                stat_col1, stat_col2, stat_col3 = st.columns(3)
+                with stat_col1:
+                    st.metric("最大误差", f"{heading_errors.max():.4f} deg")
+                with stat_col2:
+                    st.metric("最小误差", f"{heading_errors.min():.4f} deg")
+                with stat_col3:
+                    rms = np.sqrt((heading_errors**2).mean())
+                    st.metric("RMS (均方根误差)", f"{rms:.4f} deg")
 
         except Exception as e:
             st.error(f"处理文件时出错: {e}")
