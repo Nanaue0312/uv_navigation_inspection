@@ -285,6 +285,18 @@ def main():
                                 '偏航光轴偏差角误差（实际值 - 理论值）', '误差 (deg)', bounds=(dyaw_lower, dyaw_upper), plot_mode=plot_mode)
                 st.plotly_chart(fig9_err, width='stretch', config={'scrollZoom': False})
                 
+                # 统计指标显示
+                st.markdown("#### 📊 误差统计指标")
+                dyaw_errors = df['dyaw_error'].dropna()
+                stat_col1, stat_col2, stat_col3 = st.columns(3)
+                with stat_col1:
+                    st.metric("最大误差", f"{dyaw_errors.max():.4f} deg")
+                with stat_col2:
+                    st.metric("最小误差", f"{dyaw_errors.min():.4f} deg")
+                with stat_col3:
+                    rms = np.sqrt((dyaw_errors**2).mean())
+                    st.metric("RMS (均方根误差)", f"{rms:.4f} deg")
+                
             with tab6:
                 st.subheader("俯仰光轴偏差角分析 (Dpitch)")
                 st.markdown("**光轴偏差角**：算法输出的光轴偏差角与真实值对比，单位为度")
@@ -295,16 +307,21 @@ def main():
                                      '理论值与实际值俯仰光轴偏差角对比', '偏差角 (deg)', plot_mode=plot_mode)
                 st.plotly_chart(fig10, width='stretch', config={'scrollZoom': False})
                 
+                # 显示误差图
+                fig10_err = plot_error(df, 'timestamp', 'dpitch_error',
+                                 '俯仰光轴偏差角误差（实际值 - 理论值）', '误差 (deg)', bounds=(dpitch_lower, dpitch_upper), plot_mode=plot_mode)
+                st.plotly_chart(fig10_err, width='stretch', config={'scrollZoom': False})
+
                 # 统计指标显示
                 st.markdown("#### 📊 误差统计指标")
-                heading_errors = df['heading_error'].dropna()
+                dpitch_errors = df['dpitch_error'].dropna()
                 stat_col1, stat_col2, stat_col3 = st.columns(3)
                 with stat_col1:
-                    st.metric("最大误差", f"{heading_errors.max():.4f} deg")
+                    st.metric("最大误差", f"{dpitch_errors.max():.4f} deg")
                 with stat_col2:
-                    st.metric("最小误差", f"{heading_errors.min():.4f} deg")
+                    st.metric("最小误差", f"{dpitch_errors.min():.4f} deg")
                 with stat_col3:
-                    rms = np.sqrt((heading_errors**2).mean())
+                    rms = np.sqrt((dpitch_errors**2).mean())
                     st.metric("RMS (均方根误差)", f"{rms:.4f} deg")
 
         except Exception as e:
