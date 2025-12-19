@@ -56,7 +56,7 @@ def main():
                 )
                 
                 st.subheader("🛡️ 数据过滤")
-                filter_low_conf = st.toggle("过滤低置信度/异常数据", value=False, help="开启后将隐藏置信度<0.5或算法输出为0的异常点")
+                filter_low_conf = st.toggle("过滤低置信度/异常数据", value=True, help="开启后将隐藏置信度<0.5或算法输出为0的异常点")
                 
                 # Error bound configuration with input fields
                 st.subheader("误差上限/下限配置")
@@ -176,7 +176,7 @@ def main():
                 ))
             
             # Tabs for analysis
-            tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["距离分析", "侧向分析", "纵向分析", "高度分析", "偏航光轴偏差角", "俯仰光轴偏差角"])
+            tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["距离分析", "侧向分析", "纵向分析", "高度分析", "偏航光轴偏差角", "俯仰光轴偏差角", "原始数据"])
             
             with tab1:
                 st.subheader("距离分析")
@@ -323,6 +323,90 @@ def main():
                 with stat_col3:
                     rms = np.sqrt((dpitch_errors**2).mean())
                     st.metric("RMS (均方根误差)", f"{rms:.4f} deg")
+
+            with tab7:
+                st.subheader("📋 原始数据表格")
+                st.markdown("""
+                **颜色说明**：
+                - 🟡 **黄色背景**：该行存在超出误差阈值的数据
+                - 🔴 **红色背景**：该行置信度过低 (< 0.5)
+                """)
+                
+                # 准备显示用的数据框
+                display_df = df.copy()
+                
+                # 选择要显示的列并重命名
+                display_columns = {
+                    'frame_id': '帧号',
+                    'timestamp': '时间(s)',
+                    'gt_distance': '真值距离(m)',
+                    'algo_distance': '算法距离(m)',
+                    'distance_error': '距离误差(m)',
+                    'gt_lateral': '真值侧向(m)',
+                    'algo_lateral': '算法侧向(m)',
+                    'lateral_error': '侧向误差(m)',
+                    'gt_longitudinal': '真值纵向(m)',
+                    'algo_longitudinal': '算法纵向(m)',
+                    'longitudinal_error': '纵向误差(m)',
+                    'gt_height': '真值高度(m)',
+                    'algo_height': '算法高度(m)',
+                    'height_error': '高度误差(m)',
+                    'dyaw_error': '偏航误差(°)',
+                    'dpitch_error': '俯仰误差(°)',
+                    'algo_confidence': '置信度'
+                }
+                
+                # 筛选存在的列
+                existing_cols = [col for col in display_columns.keys() if col in display_df.columns]
+                display_df = display_df[existing_cols].copy()
+                display_df.rename(columns={k: v for k, v in display_columns.items() if k in existing_cols}, inplace=True)
+                
+                # 定义样式函数
+                def highlight_row(row):
+                    # 获取原始列名对应的显示列名
+                    conf_col = '置信度'
+                    dist_err_col = '距离误差(m)'
+                    lat_err_col = '侧向误差(m)'
+                    lon_err_col = '纵向误差(m)'
+                    height_err_col = '高度误差(m)'
+                    dyaw_err_col = '偏航误差(°)'
+                    dpitch_err_col = '俯仰误差(°)'
+                    
+                    styles = [''] * len(row)
+                    
+                    # 检查置信度 (红色优先级最高)
+                    if conf_col in row.index and row[conf_col] < 0.5:
+                        return ['background-color: #ffcccc'] * len(row)  # 红色
+                    
+                    # 检查误差是否超限 (黄色)
+                    out_of_bound = False
+                    if dist_err_col in row.index and (row[dist_err_col] < dist_lower or row[dist_err_col] > dist_upper):
+                        out_of_bound = True
+                    if lat_err_col in row.index and (row[lat_err_col] < lat_lower or row[lat_err_col] > lat_upper):
+                        out_of_bound = True
+                    if lon_err_col in row.index and (row[lon_err_col] < lon_lower or row[lon_err_col] > lon_upper):
+                        out_of_bound = True
+                    if height_err_col in row.index and (row[height_err_col] < height_lower or row[height_err_col] > height_upper):
+                        out_of_bound = True
+                    if dyaw_err_col in row.index and (row[dyaw_err_col] < dyaw_lower or row[dyaw_err_col] > dyaw_upper):
+                        out_of_bound = True
+                    if dpitch_err_col in row.index and (row[dpitch_err_col] < dpitch_lower or row[dpitch_err_col] > dpitch_upper):
+                        out_of_bound = True
+                    
+                    if out_of_bound:
+                        return ['background-color: #ffffcc'] * len(row)  # 黄色
+                    
+                    return styles
+                
+                # 应用样式
+                styled_df = display_df.style.apply(highlight_row, axis=1)
+                
+                # 格式化数值
+                format_dict = {col: '{:.4f}' for col in display_df.columns if display_df[col].dtype in ['float64', 'float32']}
+                styled_df = styled_df.format(format_dict)
+                
+                # 显示表格
+                st.dataframe(styled_df, use_container_width=True, height=600)
 
         except Exception as e:
             st.error(f"处理文件时出错: {e}")
