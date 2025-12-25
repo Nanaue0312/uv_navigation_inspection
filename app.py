@@ -1,5 +1,6 @@
 import streamlit as st
 import numpy as np
+import pandas as pd
 from src.data_loader import load_data
 from src.processor import process_frames
 from src.visualizer import plot_comparison, plot_error
@@ -51,7 +52,7 @@ def main():
                     format_func=lambda x: {'lines': '📈 折线图', 
                                           'markers': '⚫ 散点图', 
                                           'lines+markers': '📊 折线+散点'}[x],
-                    index=0,
+                    index=2,
                     key='plot_mode'
                 )
                 
@@ -104,21 +105,24 @@ def main():
                     dpitch_upper = st.number_input("上限", value=1.5, step=0.1, key="dpitch_upper")
 
 
-            df = process_frames(frames)
-            
-            # Apply filtering if enabled
+            # 原始完整数据（不做修改）
+            original_df = process_frames(frames)
+            # 用于绘图和统计的可过滤副本
+            filtered_df = original_df.copy()
+
+            # Apply filtering if enabled (only affects plots/stats)
             if filter_low_conf:
-                initial_len = len(df)
+                initial_len = len(filtered_df)
                 # Filter out low confidence or zero distance points
                 # Ensure we don't crash if columns are missing, though processor guarantees them
-                if 'algo_confidence' in df.columns:
-                    mask = (df['algo_confidence'] > 0.5) & (df['algo_distance'] > 0.1)
-                    df = df[mask]
-                filtered_len = len(df)
+                if 'algo_confidence' in filtered_df.columns:
+                    mask = (filtered_df['algo_confidence'] > 0.5) & (filtered_df['algo_distance'] > 0.1)
+                    filtered_df = filtered_df[mask]
+                filtered_len = len(filtered_df)
                 if initial_len > filtered_len:
-                    st.sidebar.info(f"已过滤 {initial_len - filtered_len} 个异常点")
+                    st.sidebar.info(f"已过滤 {initial_len - filtered_len} 个异常点（仅用于图表与统计显示）")
                 elif filtered_len == 0:
-                    st.sidebar.warning("过滤后数据为空！")
+                    st.sidebar.warning("过滤后用于图表的数据为空！")
             
             # Summary Metrics using statistics from JSON
             st.header("📈 概要统计")
@@ -129,7 +133,7 @@ def main():
             conv_metrics = statistics.get('convergence_metrics', {})
             
             col1, col2, col3, col4 = st.columns(4)
-            col1.metric("总帧数", exec_stats.get('total_frames', len(df)))
+            col1.metric("总帧数", exec_stats.get('total_frames', len(filtered_df)))
             col2.metric("成功率", f"{exec_stats.get('success_rate', 0)*100:.1f}%")
             
             # Use pre-calculated RMSE from statistics
@@ -180,18 +184,18 @@ def main():
             
             with tab1:
                 st.subheader("距离分析")
-                fig1 = plot_comparison(df, 'timestamp', 'gt_distance', 'algo_distance', 
+                fig1 = plot_comparison(filtered_df, 'timestamp', 'gt_distance', 'algo_distance', 
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)', 
                                      '理论值与实际值距离对比', '距离 (m)', plot_mode=plot_mode)
                 st.plotly_chart(fig1, width='stretch', config={'scrollZoom': False})
                 
-                fig2 = plot_error(df, 'timestamp', 'distance_error', 
+                fig2 = plot_error(filtered_df, 'timestamp', 'distance_error', 
                                 '距离误差（实际值 - 理论值）', '误差 (m)', bounds=(dist_lower, dist_upper), plot_mode=plot_mode)
                 st.plotly_chart(fig2, width='stretch', config={'scrollZoom': False})
                 
                 # 统计指标显示
                 st.markdown("#### 📊 误差统计指标")
-                dist_errors = df['distance_error'].dropna()
+                dist_errors = filtered_df['distance_error'].dropna()
                 stat_col1, stat_col2, stat_col3 = st.columns(3)
                 with stat_col1:
                     st.metric("最大误差", f"{dist_errors.max():.4f} m")
@@ -203,18 +207,18 @@ def main():
                 
             with tab2:
                 st.subheader("侧向位置分析")
-                fig3 = plot_comparison(df, 'timestamp', 'gt_lateral', 'algo_lateral',
+                fig3 = plot_comparison(filtered_df, 'timestamp', 'gt_lateral', 'algo_lateral',
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)',
                                      '理论值与实际值侧向对比', '侧向距离 (m)', plot_mode=plot_mode)
                 st.plotly_chart(fig3, width='stretch', config={'scrollZoom': False})
                 
-                fig4 = plot_error(df, 'timestamp', 'lateral_error',
+                fig4 = plot_error(filtered_df, 'timestamp', 'lateral_error',
                                 '侧向误差（实际值 - 理论值）', '误差 (m)', bounds=(lat_lower, lat_upper), plot_mode=plot_mode)
                 st.plotly_chart(fig4, width='stretch', config={'scrollZoom': False})
                 
                 # 统计指标显示
                 st.markdown("#### 📊 误差统计指标")
-                lat_errors = df['lateral_error'].dropna()
+                lat_errors = filtered_df['lateral_error'].dropna()
                 stat_col1, stat_col2, stat_col3 = st.columns(3)
                 with stat_col1:
                     st.metric("最大误差", f"{lat_errors.max():.4f} m")
@@ -226,18 +230,18 @@ def main():
                 
             with tab3:
                 st.subheader("纵向位置分析")
-                fig5 = plot_comparison(df, 'timestamp', 'gt_longitudinal', 'algo_longitudinal',
+                fig5 = plot_comparison(filtered_df, 'timestamp', 'gt_longitudinal', 'algo_longitudinal',
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)',
                                      '理论值与实际值纵向对比', '纵向距离 (m)', plot_mode=plot_mode)
                 st.plotly_chart(fig5, width='stretch', config={'scrollZoom': False})
                 
-                fig6 = plot_error(df, 'timestamp', 'longitudinal_error',
+                fig6 = plot_error(filtered_df, 'timestamp', 'longitudinal_error',
                                 '纵向误差（实际值 - 理论值）', '误差 (m)', bounds=(lon_lower, lon_upper), plot_mode=plot_mode)
                 st.plotly_chart(fig6, width='stretch', config={'scrollZoom': False})
                 
                 # 统计指标显示
                 st.markdown("#### 📊 误差统计指标")
-                lon_errors = df['longitudinal_error'].dropna()
+                lon_errors = filtered_df['longitudinal_error'].dropna()
                 stat_col1, stat_col2, stat_col3 = st.columns(3)
                 with stat_col1:
                     st.metric("最大误差", f"{lon_errors.max():.4f} m")
@@ -249,18 +253,18 @@ def main():
                 
             with tab4:
                 st.subheader("高度分析")
-                fig7 = plot_comparison(df, 'timestamp', 'gt_height', 'algo_height',
+                fig7 = plot_comparison(filtered_df, 'timestamp', 'gt_height', 'algo_height',
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)',
                                      '理论值与实际值高度对比', '高度 (m)', plot_mode=plot_mode)
                 st.plotly_chart(fig7, width='stretch', config={'scrollZoom': False})
                 
-                fig8 = plot_error(df, 'timestamp', 'height_error',
+                fig8 = plot_error(filtered_df, 'timestamp', 'height_error',
                                 '高度误差（实际值 - 理论值）', '误差 (m)', bounds=(height_lower, height_upper), plot_mode=plot_mode)
                 st.plotly_chart(fig8, width='stretch', config={'scrollZoom': False})
                 
                 # 统计指标显示
                 st.markdown("#### 📊 误差统计指标")
-                height_errors = df['height_error'].dropna()
+                height_errors = filtered_df['height_error'].dropna()
                 stat_col1, stat_col2, stat_col3 = st.columns(3)
                 with stat_col1:
                     st.metric("最大误差", f"{height_errors.max():.4f} m")
@@ -275,19 +279,19 @@ def main():
                 st.markdown("**光轴偏差角**：算法输出的光轴偏差角与真实值对比，单位为度")
                 
                 # 显示真值与算法输出的对比
-                fig9 = plot_comparison(df, 'timestamp', 'gt_dyaw', 'algo_dyaw',
+                fig9 = plot_comparison(filtered_df, 'timestamp', 'gt_dyaw', 'algo_dyaw',
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)',
                                      '理论值与实际值偏航光轴偏差角对比', '偏差角 (deg)', plot_mode=plot_mode)
                 st.plotly_chart(fig9, width='stretch', config={'scrollZoom': False})
                 
                 # 显示误差图
-                fig9_err = plot_error(df, 'timestamp', 'dyaw_error',
+                fig9_err = plot_error(filtered_df, 'timestamp', 'dyaw_error',
                                 '偏航光轴偏差角误差（实际值 - 理论值）', '误差 (deg)', bounds=(dyaw_lower, dyaw_upper), plot_mode=plot_mode)
                 st.plotly_chart(fig9_err, width='stretch', config={'scrollZoom': False})
                 
                 # 统计指标显示
                 st.markdown("#### 📊 误差统计指标")
-                dyaw_errors = df['dyaw_error'].dropna()
+                dyaw_errors = filtered_df['dyaw_error'].dropna()
                 stat_col1, stat_col2, stat_col3 = st.columns(3)
                 with stat_col1:
                     st.metric("最大误差", f"{dyaw_errors.max():.4f} deg")
@@ -302,19 +306,19 @@ def main():
                 st.markdown("**光轴偏差角**：算法输出的光轴偏差角与真实值对比，单位为度")
                 
                 # 显示真值与算法输出的对比
-                fig10 = plot_comparison(df, 'timestamp', 'gt_dpitch', 'algo_dpitch',
+                fig10 = plot_comparison(filtered_df, 'timestamp', 'gt_dpitch', 'algo_dpitch',
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)',
                                      '理论值与实际值俯仰光轴偏差角对比', '偏差角 (deg)', plot_mode=plot_mode)
                 st.plotly_chart(fig10, width='stretch', config={'scrollZoom': False})
                 
                 # 显示误差图
-                fig10_err = plot_error(df, 'timestamp', 'dpitch_error',
+                fig10_err = plot_error(filtered_df, 'timestamp', 'dpitch_error',
                                  '俯仰光轴偏差角误差（实际值 - 理论值）', '误差 (deg)', bounds=(dpitch_lower, dpitch_upper), plot_mode=plot_mode)
                 st.plotly_chart(fig10_err, width='stretch', config={'scrollZoom': False})
 
                 # 统计指标显示
                 st.markdown("#### 📊 误差统计指标")
-                dpitch_errors = df['dpitch_error'].dropna()
+                dpitch_errors = filtered_df['dpitch_error'].dropna()
                 stat_col1, stat_col2, stat_col3 = st.columns(3)
                 with stat_col1:
                     st.metric("最大误差", f"{dpitch_errors.max():.4f} deg")
@@ -332,10 +336,64 @@ def main():
                 - 🔴 **红色背景**：该行置信度过低 (< 0.5)
                 """)
                 
-                # 准备显示用的数据框
-                display_df = df.copy()
+                # 允许用户上传 CSV 并将数据横向拼接（扩充列数，不扩充行数）
+                uploaded_csv = st.file_uploader("上传 CSV 文件并横向拼接", type=['csv'], key='upload_csv')
+                # 基于 original_df 构建用于显示的合并表格（默认未改动）
+                combined_original = original_df.copy()
+                if uploaded_csv is not None:
+                    try:
+                        uploaded_df = pd.read_csv(uploaded_csv)
+                        # 清理列名空白
+                        uploaded_df.columns = uploaded_df.columns.str.strip()
+                        original_df.columns = original_df.columns.str.strip()
+
+                        # 首选的对齐键（优先级）：image_path, image_name, frame_id, timestamp
+                        preferred_keys = ['image_path', 'image_name', 'frame_id', 'timestamp']
+                        key = next((k for k in preferred_keys if k in uploaded_df.columns and k in original_df.columns), None)
+
+                        if key is not None:
+                            # 若找到公共键，按该键左连接（original_df 为左表），保留原始所有行，新增列来自 uploaded_df
+                            # 对上传列与原始重复的列添加后缀 '_csv' 以避免覆盖
+                            overlap = set(uploaded_df.columns) & set(original_df.columns)
+                            rename_map = {col: f"{col}_csv" for col in overlap if col != key}
+                            uploaded_renamed = uploaded_df.rename(columns=rename_map)
+
+                            # 转换数值列
+                            for col in uploaded_renamed.columns:
+                                if col in original_df.columns and pd.api.types.is_numeric_dtype(original_df[col]):
+                                    uploaded_renamed[col] = pd.to_numeric(uploaded_renamed[col], errors='coerce')
+
+                            combined_original = original_df.merge(uploaded_renamed, on=key, how='left')
+                            added_cols = [c for c in combined_original.columns if c not in original_df.columns]
+                            st.success(f"已完成拼接")
+
+                        else:
+                            # 若未找到公共键，但行数一致则按索引横向拼接
+                            if len(uploaded_df) == len(original_df):
+                                # 重命名重复列
+                                overlap = set(uploaded_df.columns) & set(original_df.columns)
+                                rename_map = {col: f"{col}_csv" for col in overlap}
+                                uploaded_renamed = uploaded_df.rename(columns=rename_map)
+
+                                # 转换数值列
+                                for col in uploaded_renamed.columns:
+                                    if col in original_df.columns and pd.api.types.is_numeric_dtype(original_df[col]):
+                                        uploaded_renamed[col] = pd.to_numeric(uploaded_renamed[col], errors='coerce')
+
+                                # 按索引合并（左表为 original_df）
+                                uploaded_renamed = uploaded_renamed.reset_index(drop=True)
+                                combined_original = pd.concat([original_df.reset_index(drop=True), uploaded_renamed], axis=1)
+                                added_cols = [c for c in uploaded_renamed.columns if c not in original_df.columns]
+                                st.success(f"行数匹配，已按索引横向拼接；新增列: {len(added_cols)} 个（示例: {added_cols[:5]})。")
+                            else:
+                                st.warning("无法自动横向对齐：未找到公共键（image_path/frame_id/timestamp 等）且上传 CSV 行数与原始数据不匹配。请提供带有匹配键的 CSV 或确保行数一致。")
+                    except Exception as e:
+                        st.error(f"处理上传的 CSV 时出错: {e}")
+
+                # 准备显示用的数据框（未做过滤）
+                display_df = combined_original.copy()
                 
-                # 选择要显示的列并重命名
+                # 选择要显示的列并重命名：已知列优先，其次显示上传 CSV 带来的新增列
                 display_columns = {
                     'frame_id': '帧号',
                     'timestamp': '时间(s)',
@@ -355,11 +413,20 @@ def main():
                     'dpitch_error': '俯仰误差(°)',
                     'algo_confidence': '置信度'
                 }
-                
-                # 筛选存在的列
-                existing_cols = [col for col in display_columns.keys() if col in display_df.columns]
-                display_df = display_df[existing_cols].copy()
-                display_df.rename(columns={k: v for k, v in display_columns.items() if k in existing_cols}, inplace=True)
+
+                # 将上传的新增列放在最左侧，已知列次之，其他列最后
+                added_cols = [col for col in display_df.columns if col not in original_df.columns]
+                # 已知列（在 display_columns 中）按预定义顺序保留
+                known_cols = [col for col in display_columns.keys() if col in display_df.columns]
+                # 其余列：去掉已置左的新增列和已知列
+                other_cols = [col for col in display_df.columns if col not in known_cols and col not in added_cols]
+                ordered_cols = added_cols + known_cols + other_cols
+                # 去重且保持顺序（以防意外重复）
+                seen = set()
+                ordered_cols = [x for x in ordered_cols if not (x in seen or seen.add(x))]
+                display_df = display_df[ordered_cols].copy()
+                # 仅重命名我们识别的已知列
+                display_df.rename(columns={k: v for k, v in display_columns.items() if k in known_cols}, inplace=True)
                 
                 # 定义样式函数
                 def highlight_row(row):
