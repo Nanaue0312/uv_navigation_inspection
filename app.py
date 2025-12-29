@@ -421,6 +421,11 @@ def main():
                 # 其余列：去掉已置左的新增列和已知列
                 other_cols = [col for col in display_df.columns if col not in known_cols and col not in added_cols]
                 ordered_cols = added_cols + known_cols + other_cols
+
+                # 隐藏不希望在“原始数据”表格中展示的列
+                hidden_cols = {'gt_yaw', 'gt_pitch'}
+                ordered_cols = [c for c in ordered_cols if c not in hidden_cols]
+
                 # 去重且保持顺序（以防意外重复）
                 seen = set()
                 ordered_cols = [x for x in ordered_cols if not (x in seen or seen.add(x))]
