@@ -409,9 +409,16 @@ def main():
                     'gt_height': '真值高度(m)',
                     'algo_height': '算法高度(m)',
                     'height_error': '高度误差(m)',
+                    # 偏差角列顺序：真值 → 算法 → 误差
+                    'gt_dyaw': '真值偏航光轴偏差角(°)',
+                    'algo_dyaw': '算法偏航光轴偏差角(°)',
                     'dyaw_error': '偏航误差(°)',
+                    'gt_dpitch': '真值俯仰光轴偏差角(°)',
+                    'algo_dpitch': '算法俯仰光轴偏差角(°)',
                     'dpitch_error': '俯仰误差(°)',
-                    'algo_confidence': '置信度'
+                    'algo_confidence': '置信度',
+                    'image_path': 'image_path',
+                    'image_name': '图片名称'
                 }
 
                 # 将上传的新增列放在最左侧，已知列次之，其他列最后
@@ -423,15 +430,27 @@ def main():
                 ordered_cols = added_cols + known_cols + other_cols
 
                 # 隐藏不希望在“原始数据”表格中展示的列
-                hidden_cols = {'gt_yaw', 'gt_pitch'}
+                # - gt_yaw/gt_pitch: 姿态角（rad），一般不需要在原始表格里展示
+                # - timestamp: 按需求隐藏时间列
+                # - image_name: 按需求隐藏图片名称（保留图片路径）
+                hidden_cols = {'gt_yaw', 'gt_pitch', 'timestamp', 'image_name'}
                 ordered_cols = [c for c in ordered_cols if c not in hidden_cols]
 
                 # 去重且保持顺序（以防意外重复）
                 seen = set()
                 ordered_cols = [x for x in ordered_cols if not (x in seen or seen.add(x))]
+
+                # 将图片路径始终放在最前（后续会插入一个“无列名”的序号列作为第一列）
+                if 'image_path' in ordered_cols:
+                    ordered_cols = ['image_path'] + [c for c in ordered_cols if c != 'image_path']
+
                 display_df = display_df[ordered_cols].copy()
                 # 仅重命名我们识别的已知列
                 display_df.rename(columns={k: v for k, v in display_columns.items() if k in known_cols}, inplace=True)
+
+                # 使用 DataFrame 索引作为序号列（Streamlit 左侧索引列），并命名为 No
+                display_df.index = range(1, len(display_df) + 1)
+                display_df.index.name = 'No'
                 
                 # 定义样式函数
                 def highlight_row(row):
