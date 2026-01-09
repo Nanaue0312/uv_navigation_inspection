@@ -7,9 +7,152 @@ from src.visualizer import plot_comparison, plot_error
 
 st.set_page_config(page_title="算法性能评估工具", layout="wide")
 
+def show_help_page():
+    """显示字段说明帮助页面"""
+    st.title("数据字段说明")
+    st.markdown("本页面详细说明分析数据中各个字段的含义和用途。")
+    
+    # 基本信息
+    st.header("基本信息")
+    help_data_basic = [
+        ("No", "当前行行号"),
+        ("image_path", "对应图片的路径（相对于数据集根目录），用于关联数据与对应的图像文件"),
+    ]
+    for field, desc in help_data_basic:
+        st.markdown(f"**{field}**: {desc}")
+    
+    # 无人机姿态参数
+    st.header("无人机姿态参数（欧拉角）")
+    help_data_drone = [
+        ("drone_roll_deg", "无人机的横滚角，是无人机姿态（欧拉角）的参数之一，单位为度"),
+        ("drone_pitch_deg", "无人机的俯仰角，是无人机姿态（欧拉角）的参数之一，单位为度"),
+        ("drone_yaw_deg", "无人机的航向角，是无人机姿态（欧拉角）的参数之一，单位为度"),
+    ]
+    for field, desc in help_data_drone:
+        st.markdown(f"**{field}**: {desc}")
+    
+    # 相机安装参数
+    st.header("相机安装参数")
+    help_data_camera = [
+        ("cam_mount_pitch_deg", "相机安装在无人机上的俯仰角（相机安装参数），单位为度，设置为 0 以简化处理（让相机与飞机状态重合）"),
+        ("cam_offset_z_m", "相机安装在无人机上的高度偏移量（相机安装参数），单位为米，设置为 0 以简化处理（让相机与飞机状态重合）"),
+        ("gain_percent", "相机的增益百分比，取值范围为 0-100，用于描述相机的成像参数（未使用此参数）"),
+    ]
+    for field, desc in help_data_camera:
+        st.markdown(f"**{field}**: {desc}")
+    
+    # 无人机位置参数（NED坐标系）
+    st.header("无人机位置参数（NED坐标系）")
+    st.info("NED坐标系：N(North-北向/前向)、E(East-东向/右向)、D(Down-下向)")
+    help_data_drone_pos = [
+        ("drone_x_ned_m", "无人机在 NED 坐标系下的 X 轴坐标（对应北向 / 前向），单位为米"),
+        ("drone_y_ned_m", "无人机在 NED 坐标系下的 Y 轴坐标（对应东向 / 右向），单位为米"),
+        ("drone_z_ned_m", "无人机在 NED 坐标系下的 Z 轴坐标（对应下向），单位为米"),
+    ]
+    for field, desc in help_data_drone_pos:
+        st.markdown(f"**{field}**: {desc}")
+    
+    # 目标位置参数（NED坐标系）
+    st.header("目标位置参数（NED坐标系）")
+    help_data_target_pos = [
+        ("target_x_ned_m", "目标在 NED 坐标系下的 X 轴坐标（对应北向 / 前向），单位为米"),
+        ("target_y_ned_m", "目标在 NED 坐标系下的 Y 轴坐标（对应东向 / 右向），单位为米"),
+        ("target_z_ned_m", "目标在 NED 坐标系下的 Z 轴坐标（对应下向），单位为米"),
+    ]
+    for field, desc in help_data_target_pos:
+        st.markdown(f"**{field}**: {desc}")
+    
+    # 目标姿态参数
+    st.header("目标姿态参数（欧拉角）")
+    help_data_target_att = [
+        ("target_roll_deg", "目标的横滚角，是目标姿态（欧拉角）的参数之一，单位为度"),
+        ("target_pitch_deg", "目标的俯仰角，是目标姿态（欧拉角）的参数之一，单位为度"),
+        ("target_yaw_deg", "目标的航向角，是目标姿态（欧拉角）的参数之一，单位为度"),
+    ]
+    for field, desc in help_data_target_att:
+        st.markdown(f"**{field}**: {desc}")
+    
+    # 距离测量
+    st.header("距离测量")
+    help_data_distance = [
+        ("真值距离 (m)", "无人机与目标之间实际距离的真实值，单位为米"),
+        ("算法距离 (m)", "通过算法计算得到的无人机与目标之间的距离，单位为米"),
+        ("距离误差 (m)", '"算法距离" 与 "真值距离" 的差值，用于评估算法的距离计算精度'),
+    ]
+    for field, desc in help_data_distance:
+        st.markdown(f"**{field}**: {desc}")
+    
+    # 侧向位置
+    st.header("侧向位置测量")
+    help_data_lateral = [
+        ("真值侧向 (m)", "无人机与目标在侧向（通常对应 NED 坐标系 Y 轴）相对位置的真实值，单位为米"),
+        ("算法侧向 (m)", "通过算法计算得到的无人机与目标在侧向的相对位置，单位为米"),
+        ("侧向误差 (m)", '"算法侧向" 与 "真值侧向" 的差值，用于评估算法的侧向位置计算精度'),
+    ]
+    for field, desc in help_data_lateral:
+        st.markdown(f"**{field}**: {desc}")
+    
+    # 纵向位置
+    st.header("纵向位置测量")
+    help_data_longitudinal = [
+        ("真值纵向 (m)", "无人机与目标在纵向（通常对应 NED 坐标系 X 轴）相对位置的真实值，单位为米"),
+        ("算法纵向 (m)", "通过算法计算得到的无人机与目标在纵向的相对位置，单位为米"),
+        ("纵向误差 (m)", '"算法纵向" 与 "真值纵向" 的差值，用于评估算法的纵向位置计算精度'),
+    ]
+    for field, desc in help_data_longitudinal:
+        st.markdown(f"**{field}**: {desc}")
+    
+    # 高度位置
+    st.header("高度位置测量")
+    help_data_height = [
+        ("真值高度 (m)", "无人机与目标在高度方向（通常对应 NED 坐标系 Z 轴）相对位置的真实值，单位为米"),
+        ("算法高度 (m)", "通过算法计算得到的无人机与目标在高度方向的相对位置，单位为米"),
+        ("高度误差 (m)", '"算法高度" 与 "真值高度" 的差值，用于评估算法的高度计算精度'),
+    ]
+    for field, desc in help_data_height:
+        st.markdown(f"**{field}**: {desc}")
+    
+    # 偏航角
+    st.header("偏航光轴偏差角测量")
+    help_data_yaw = [
+        ("真值偏航光轴偏差角(°)", "目标偏航角的真实变化量"),
+        ("算法偏航光轴偏差角(°)", "算法计算得到的目标偏航角变化量"),
+        ("偏航误差 (°)", "算法计算的偏航角与真实偏航角的差值，单位为度，用于评估姿态计算精度"),
+    ]
+    for field, desc in help_data_yaw:
+        st.markdown(f"**{field}**: {desc}")
+    
+    # 俯仰角
+    st.header("俯仰光轴偏差角测量")
+    help_data_pitch = [
+        ("真值俯仰光轴偏差角(°)", "目标俯仰角的真实变化量"),
+        ("算法俯仰光轴偏差角(°)", "算法计算得到的目标俯仰角变化量"),
+        ("俯仰误差 (°)", "算法计算的俯仰角与真实俯仰角的差值，单位为度，用于评估姿态计算精度"),
+    ]
+    for field, desc in help_data_pitch:
+        st.markdown(f"**{field}**: {desc}")
+    
+    # 置信度
+    st.header("算法输出质量")
+    st.markdown("**置信度**: 算法输出结果的可靠程度（通常为 0-1），置信度越高代表结果越可靠")
+
 def main():
-    st.title("📊 仿真应用理论输出评估控制算法性能")
+    st.title("仿真应用理论输出评估控制算法性能")
     st.markdown("上传 `analysis_data.json` 文件以生成性能评估图表。")
+    
+    # 添加帮助按钮
+    col1, col2 = st.columns([6, 1])
+    with col2:
+        if st.button("查看字段说明", use_container_width=True):
+            st.session_state.show_help = True
+    
+    # 如果用户点击了帮助按钮，显示帮助页面
+    if st.session_state.get('show_help', False):
+        show_help_page()
+        if st.button("返回主页"):
+            st.session_state.show_help = False
+            st.rerun()
+        return
     
     uploaded_file = st.file_uploader("选择数据文件 (JSON)", type=['json'])
     
@@ -29,7 +172,7 @@ def main():
             
             # Display metadata in sidebar
             with st.sidebar:
-                st.header("📋 仿真信息")
+                st.header("仿真信息")
                 sim_config = metadata.get('simulation_config', {})
                 scenario = metadata.get('scenario', {})
                 
@@ -44,19 +187,25 @@ def main():
                 st.text(f"下滑道: {scenario.get('glide_path', 'N/A')}")
                 st.text(f"海况: {scenario.get('sea_state', 'N/A')}")
                 
+                # 添加帮助按钮
+                st.markdown("---")
+                if st.button("查看字段说明帮助", use_container_width=True, type="secondary"):
+                    st.session_state.show_help = True
+                    st.rerun()
+                
                 # Plot mode selection
-                st.subheader("📊 图表显示模式")
+                st.subheader("图表显示模式")
                 plot_mode = st.radio(
                     "选择显示方式",
                     options=['lines', 'markers', 'lines+markers'],
-                    format_func=lambda x: {'lines': '📈 折线图', 
-                                          'markers': '⚫ 散点图', 
-                                          'lines+markers': '📊 折线+散点'}[x],
+                    format_func=lambda x: {'lines': '折线图', 
+                                          'markers': '散点图', 
+                                          'lines+markers': '折线+散点'}[x],
                     index=2,
                     key='plot_mode'
                 )
                 
-                st.subheader("🛡️ 数据过滤")
+                st.subheader("数据过滤")
                 filter_low_conf = st.toggle("过滤低置信度/异常数据", value=True, help="开启后将隐藏置信度<0.5或算法输出为0的异常点")
                 
                 # Error bound configuration with input fields
