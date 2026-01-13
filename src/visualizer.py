@@ -3,7 +3,7 @@ import pandas as pd
 
 def plot_comparison(df: pd.DataFrame, x_col: str, y1_col: str, y2_col: str, 
                    y1_label: str, y2_label: str, title: str, ylabel: str, 
-                   x_range: tuple = None, plot_mode: str = 'lines'):
+                   x_range: tuple = None, plot_mode: str = 'lines', show_fitting: bool = True):
     """
     Plot comparison between two variables using Plotly for interactive zooming.
     
@@ -18,6 +18,7 @@ def plot_comparison(df: pd.DataFrame, x_col: str, y1_col: str, y2_col: str,
         ylabel: Y-axis label
         x_range: tuple of (x_min, x_max) to zoom into specific time range, or None for full range
         plot_mode: 'lines', 'markers', or 'lines+markers'
+        show_fitting: Whether to show curve fitting for markers mode (default: True)
     
     Returns:
         Plotly Figure object
@@ -50,6 +51,18 @@ def plot_comparison(df: pd.DataFrame, x_col: str, y1_col: str, y2_col: str,
         hovertemplate=hovertemplate
     ))
     
+    # Add curve fitting for first trace (if markers mode and show_fitting)
+    if 'markers' in plot_mode and show_fitting and 'lines' not in plot_mode:
+        ma1 = df[y1_col].rolling(window=30, min_periods=1).mean()
+        fig.add_trace(go.Scatter(
+            x=df[x_col],
+            y=ma1,
+            mode='lines',
+            name=f'{y1_label} 拟合',
+            line=dict(width=2),
+            visible='legendonly'
+        ))
+    
     # Add second trace (Algorithm Output)
     fig.add_trace(go.Scatter(
         x=df[x_col], 
@@ -61,6 +74,18 @@ def plot_comparison(df: pd.DataFrame, x_col: str, y1_col: str, y2_col: str,
         customdata=custom_data,
         hovertemplate=hovertemplate
     ))
+    
+    # Add curve fitting for second trace (if markers mode and show_fitting)
+    if 'markers' in plot_mode and show_fitting and 'lines' not in plot_mode:
+        ma2 = df[y2_col].rolling(window=30, min_periods=1).mean()
+        fig.add_trace(go.Scatter(
+            x=df[x_col],
+            y=ma2,
+            mode='lines',
+            name=f'{y2_label} 拟合',
+            line=dict(width=2, dash='dash'),
+            visible='legendonly'
+        ))
     
     # Update layout
     fig.update_layout(
@@ -91,7 +116,7 @@ def plot_comparison(df: pd.DataFrame, x_col: str, y1_col: str, y2_col: str,
 
 def plot_error(df: pd.DataFrame, x_col: str, err_col: str, 
               title: str, ylabel: str, bounds: tuple = None, 
-              x_range: tuple = None, plot_mode: str = 'lines'):
+              x_range: tuple = None, plot_mode: str = 'lines', show_fitting: bool = True):
     """
     Plot error over time with moving average and optional bounds using Plotly.
     
@@ -104,13 +129,14 @@ def plot_error(df: pd.DataFrame, x_col: str, err_col: str,
         bounds: tuple of (lower_bound, upper_bound) or None
         x_range: tuple of (x_min, x_max) to zoom into specific time range, or None for full range
         plot_mode: 'lines', 'markers', or 'lines+markers'
+        show_fitting: Whether to show curve fitting (default: True)
     
     Returns:
         Plotly Figure object
     """
     fig = go.Figure()
     
-    # Calculate moving average
+    # Calculate moving average for curve fitting
     ma = df[err_col].rolling(window=30, min_periods=1).mean()
     
     # Prepare hover template
@@ -136,16 +162,28 @@ def plot_error(df: pd.DataFrame, x_col: str, err_col: str,
         hovertemplate=hovertemplate
     ))
     
-    # Add moving average trace (only if using lines)
-    if 'lines' in plot_mode:
-        fig.add_trace(go.Scatter(
-            x=df[x_col],
-            y=ma,
-            mode='lines',
-            name='拟合曲线',
-            line=dict(color='black', width=2),
-            visible='legendonly'
-        ))
+    # Add moving average trace (curve fitting) if enabled
+    if show_fitting:
+        # For markers-only mode or lines+markers mode, show fitting curve
+        if 'markers' in plot_mode:
+            fig.add_trace(go.Scatter(
+                x=df[x_col],
+                y=ma,
+                mode='lines',
+                name='拟合曲线',
+                line=dict(color='black', width=2),
+                visible='legendonly'
+            ))
+        # For lines-only mode, also show fitting but default hidden
+        elif plot_mode == 'lines':
+            fig.add_trace(go.Scatter(
+                x=df[x_col],
+                y=ma,
+                mode='lines',
+                name='拟合曲线',
+                line=dict(color='black', width=2),
+                visible='legendonly'
+            ))
     
     # Add bounds if specified
     if bounds:
