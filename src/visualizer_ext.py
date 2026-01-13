@@ -4,7 +4,7 @@ import pandas as pd
 
 
 def plot_multiple_errors(df: pd.DataFrame, x_col: str, error_configs: list, 
-                        title: str, ylabel: str, 
+                        title: str, ylabel: str, bounds: tuple = None,
                         x_range: tuple = None, plot_mode: str = 'lines', show_fitting: bool = True):
     """
     Plot multiple error curves in one chart for comprehensive comparison.
@@ -18,6 +18,7 @@ def plot_multiple_errors(df: pd.DataFrame, x_col: str, error_configs: list,
             - 'color': optional color for the curve
         title: Plot title
         ylabel: Y-axis label
+        bounds: tuple of (lower_bound, upper_bound) or None
         x_range: tuple of (x_min, x_max) to zoom into specific time range, or None for full range
         plot_mode: 'lines', 'markers', or 'lines+markers'
         show_fitting: Whether to show curve fitting (default: True)
@@ -77,6 +78,28 @@ def plot_multiple_errors(df: pd.DataFrame, x_col: str, error_configs: list,
                 hovertemplate=hovertemplate_base,
                 showlegend=True
             ))
+    
+    # Add bounds if specified
+    if bounds:
+        lower_bound, upper_bound = bounds
+        
+        # Upper bound
+        fig.add_trace(go.Scatter(
+            x=[df[x_col].min(), df[x_col].max()],
+            y=[upper_bound, upper_bound],
+            mode='lines',
+            name='上限',
+            line=dict(color='red', width=2, dash='dash')
+        ))
+        
+        # Lower bound
+        fig.add_trace(go.Scatter(
+            x=[df[x_col].min(), df[x_col].max()],
+            y=[lower_bound, lower_bound],
+            mode='lines',
+            name='下限',
+            line=dict(color='blue', width=2, dash='dash')
+        ))
     
     # Update layout
     fig.update_layout(

@@ -138,7 +138,7 @@ def show_help_page():
     st.markdown("**置信度**: 算法输出结果的可靠程度（通常为 0-1），置信度越高代表结果越可靠")
 
 def main():
-    st.title("仿真应用理论输出评估控制算法性能")
+    st.title("紫外定位数据分析")
     st.markdown("上传 `analysis_data.json` 文件以生成性能评估图表。")
     
     # 添加帮助按钮
@@ -274,7 +274,7 @@ def main():
                         st.button(f"±{preset_val}", key=f"dist_preset_{preset_val}", 
                                    help=f"设置所有距离误差为 ±{preset_val}m", 
                                    on_click=set_distance_preset, args=(preset_val,),
-                                   use_container_width=True)
+                                   width='stretch')
                 
                 # Angle error presets - second row
                 st.caption("角度误差 (deg)")
@@ -285,7 +285,7 @@ def main():
                         st.button(f"±{preset_val}", key=f"angle_preset_{preset_val}", 
                                    help=f"设置所有角度误差为 ±{preset_val}°", 
                                    on_click=set_angle_preset, args=(preset_val,),
-                                   use_container_width=True)
+                                   width='stretch')
                 
                 st.divider()
                 
@@ -385,106 +385,106 @@ def main():
             pos_rmse_3d = np.sqrt(lat_rmse**2 + lon_rmse**2 + h_rmse**2)
             col4.metric("位置RMSE(3D)", f"{pos_rmse_3d:.3f} m")
             
-            # 距离区间误差阈值统计
-            st.header("📋 RMS达标统计")
-            st.markdown("统计不同距离区间下，误差满足1σ值的样本比例")
+            # 距离区间误差阈值统计 - 暂时隐藏
+            # st.header("📋 RMS达标统计")
+            # st.markdown("统计不同距离区间下，误差满足1σ值的样本比例")
             
-            # 计算统计指标
-            stats_data = []
+            # # 计算统计指标
+            # stats_data = []
             
-            # 1. 距离>1500m
-            df_1500 = filtered_df[filtered_df['gt_distance'] > 1500].copy()
-            if len(df_1500) > 0:
-                mask_1500 = (df_1500['dyaw_error'].abs() <= 2) & (df_1500['dpitch_error'].abs() <= 2)
-                sigma_1500 = (mask_1500.sum() / len(df_1500)) * 100
-                stats_data.append({
-                    '距离区间': '> 1500m',
-                    '样本数': len(df_1500),
-                    '偏航角阈值(°)': '≤2',
-                    '俯仰角阈值(°)': '≤2',
-                    '位置误差阈值(m)': '-',
-                    '达标率(%)': f'{sigma_1500:.2f}'
-                })
-            else:
-                stats_data.append({
-                    '距离区间': '> 1500m',
-                    '样本数': 0,
-                    '偏航角阈值(°)': '≤2',
-                    '俯仰角阈值(°)': '≤2',
-                    '位置误差阈值(m)': '-',
-                    '达标率(%)': 'N/A'
-                })
+            # # 1. 距离>1500m
+            # df_1500 = filtered_df[filtered_df['gt_distance'] > 1500].copy()
+            # if len(df_1500) > 0:
+            #     mask_1500 = (df_1500['dyaw_error'].abs() <= 2) & (df_1500['dpitch_error'].abs() <= 2)
+            #     sigma_1500 = (mask_1500.sum() / len(df_1500)) * 100
+            #     stats_data.append({
+            #         '距离区间': '> 1500m',
+            #         '样本数': len(df_1500),
+            #         '偏航角阈值(°)': '≤2',
+            #         '俯仰角阈值(°)': '≤2',
+            #         '位置误差阈值(m)': '-',
+            #         '达标率(%)': f'{sigma_1500:.2f}'
+            #     })
+            # else:
+            #     stats_data.append({
+            #         '距离区间': '> 1500m',
+            #         '样本数': 0,
+            #         '偏航角阈值(°)': '≤2',
+            #         '俯仰角阈值(°)': '≤2',
+            #         '位置误差阈值(m)': '-',
+            #         '达标率(%)': 'N/A'
+            #     })
             
-            # 2. 距离>200m
-            df_200 = filtered_df[filtered_df['gt_distance'] > 200].copy()
-            if len(df_200) > 0:
-                mask_200 = (
-                    (df_200['dyaw_error'].abs() <= 1.5) & 
-                    (df_200['dpitch_error'].abs() <= 1.5) &
-                    (df_200['distance_error'].abs() <= 1.6) &
-                    (df_200['lateral_error'].abs() <= 1.6) &
-                    (df_200['longitudinal_error'].abs() <= 1.6) &
-                    (df_200['height_error'].abs() <= 1.6)
-                )
-                sigma_200 = (mask_200.sum() / len(df_200)) * 100
-                stats_data.append({
-                    '距离区间': '> 200m',
-                    '样本数': len(df_200),
-                    '偏航角阈值(°)': '≤1.5',
-                    '俯仰角阈值(°)': '≤1.5',
-                    '位置误差阈值(m)': '≤1.6',
-                    '达标率(%)': f'{sigma_200:.2f}'
-                })
-            else:
-                stats_data.append({
-                    '距离区间': '> 200m',
-                    '样本数': 0,
-                    '偏航角阈值(°)': '≤1.5',
-                    '俯仰角阈值(°)': '≤1.5',
-                    '位置误差阈值(m)': '≤1.6',
-                    '达标率(%)': 'N/A'
-                })
+            # # 2. 距离>200m
+            # df_200 = filtered_df[filtered_df['gt_distance'] > 200].copy()
+            # if len(df_200) > 0:
+            #     mask_200 = (
+            #         (df_200['dyaw_error'].abs() <= 1.5) & 
+            #         (df_200['dpitch_error'].abs() <= 1.5) &
+            #         (df_200['distance_error'].abs() <= 1.6) &
+            #         (df_200['lateral_error'].abs() <= 1.6) &
+            #         (df_200['longitudinal_error'].abs() <= 1.6) &
+            #         (df_200['height_error'].abs() <= 1.6)
+            #     )
+            #     sigma_200 = (mask_200.sum() / len(df_200)) * 100
+            #     stats_data.append({
+            #         '距离区间': '> 200m',
+            #         '样本数': len(df_200),
+            #         '偏航角阈值(°)': '≤1.5',
+            #         '俯仰角阈值(°)': '≤1.5',
+            #         '位置误差阈值(m)': '≤1.6',
+            #         '达标率(%)': f'{sigma_200:.2f}'
+            #     })
+            # else:
+            #     stats_data.append({
+            #         '距离区间': '> 200m',
+            #         '样本数': 0,
+            #         '偏航角阈值(°)': '≤1.5',
+            #         '俯仰角阈值(°)': '≤1.5',
+            #         '位置误差阈值(m)': '≤1.6',
+            #         '达标率(%)': 'N/A'
+            #     })
             
-            # 3. 距离>10m
-            df_10 = filtered_df[filtered_df['gt_distance'] > 10].copy()
-            if len(df_10) > 0:
-                mask_10 = (
-                    (df_10['dyaw_error'].abs() <= 1) & 
-                    (df_10['dpitch_error'].abs() <= 1) &
-                    (df_10['distance_error'].abs() <= 0.5) &
-                    (df_10['lateral_error'].abs() <= 0.5) &
-                    (df_10['longitudinal_error'].abs() <= 0.5) &
-                    (df_10['height_error'].abs() <= 0.5)
-                )
-                sigma_10 = (mask_10.sum() / len(df_10)) * 100
-                stats_data.append({
-                    '距离区间': '> 10m',
-                    '样本数': len(df_10),
-                    '偏航角阈值(°)': '≤1',
-                    '俯仰角阈值(°)': '≤1',
-                    '位置误差阈值(m)': '≤0.5',
-                    '达标率(%)': f'{sigma_10:.2f}'
-                })
-            else:
-                stats_data.append({
-                    '距离区间': '> 10m',
-                    '样本数': 0,
-                    '偏航角阈值(°)': '≤1',
-                    '俯仰角阈值(°)': '≤1',
-                    '位置误差阈值(m)': '≤0.5',
-                    '达标率(%)': 'N/A'
-                })
+            # # 3. 距离>10m
+            # df_10 = filtered_df[filtered_df['gt_distance'] > 10].copy()
+            # if len(df_10) > 0:
+            #     mask_10 = (
+            #         (df_10['dyaw_error'].abs() <= 1) & 
+            #         (df_10['dpitch_error'].abs() <= 1) &
+            #         (df_10['distance_error'].abs() <= 0.5) &
+            #         (df_10['lateral_error'].abs() <= 0.5) &
+            #         (df_10['longitudinal_error'].abs() <= 0.5) &
+            #         (df_10['height_error'].abs() <= 0.5)
+            #     )
+            #     sigma_10 = (mask_10.sum() / len(df_10)) * 100
+            #     stats_data.append({
+            #         '距离区间': '> 10m',
+            #         '样本数': len(df_10),
+            #         '偏航角阈值(°)': '≤1',
+            #         '俯仰角阈值(°)': '≤1',
+            #         '位置误差阈值(m)': '≤0.5',
+            #         '达标率(%)': f'{sigma_10:.2f}'
+            #     })
+            # else:
+            #     stats_data.append({
+            #         '距离区间': '> 10m',
+            #         '样本数': 0,
+            #         '偏航角阈值(°)': '≤1',
+            #         '俯仰角阈值(°)': '≤1',
+            #         '位置误差阈值(m)': '≤0.5',
+            #         '达标率(%)': 'N/A'
+            #     })
             
-            # 显示统计表格
-            stats_df = pd.DataFrame(stats_data)
-            st.dataframe(stats_df, width='stretch', hide_index=True)
+            # # 显示统计表格
+            # stats_df = pd.DataFrame(stats_data)
+            # st.dataframe(stats_df, width='stretch', hide_index=True)
             
-            st.markdown("""
-            **说明**：
-            - **达标率(%)**: 在该距离区间内，同时满足所有误差阈值条件的样本占比
-            - **位置误差**: 包括距离、侧向、纵向、高度四个维度的误差
-            - 只有当样本同时满足角度误差和位置误差的所有条件时，才计入达标样本
-            """)
+            # st.markdown("""
+            # **说明**：
+            # - **达标率(%)**: 在该距离区间内，同时满足所有误差阈值条件的样本占比
+            # - **位置误差**: 包括距离、侧向、纵向、高度四个维度的误差
+            # - 只有当样本同时满足角度误差和位置误差的所有条件时，才计入达标样本
+            # """)
             
             # Display additional statistics
             with st.expander("📊 详细统计信息"):
@@ -544,10 +544,11 @@ def main():
                     position_error_configs,
                     '位置误差综合对比', 
                     '误差 (m)',
+                    bounds=(dist_lower, dist_upper),
                     plot_mode=plot_mode,
                     show_fitting=show_fitting
                 )
-                st.plotly_chart(fig_pos, use_container_width=True, config={'scrollZoom': False})
+                st.plotly_chart(fig_pos, width='stretch', config={'scrollZoom': False})
                 
                 # 位置误差统计表格
                 st.markdown("#### 📊 位置误差统计汇总")
@@ -589,7 +590,7 @@ def main():
                     ],
                 }
                 error_stats_df = pd.DataFrame(error_stats_data)
-                st.dataframe(error_stats_df, use_container_width=True, hide_index=True)
+                st.dataframe(error_stats_df, width='stretch', hide_index=True)
                 
                 st.divider()
                 
@@ -609,10 +610,11 @@ def main():
                     angle_error_configs,
                     '角度误差综合对比', 
                     '误差 (deg)',
+                    bounds=(dyaw_lower, dyaw_upper),
                     plot_mode=plot_mode,
                     show_fitting=show_fitting
                 )
-                st.plotly_chart(fig_angle, use_container_width=True, config={'scrollZoom': False})
+                st.plotly_chart(fig_angle, width='stretch', config={'scrollZoom': False})
                 
                 # 角度误差统计表格
                 st.markdown("#### 📊 角度误差统计汇总")
@@ -639,7 +641,7 @@ def main():
                     ],
                 }
                 angle_error_stats_df = pd.DataFrame(angle_error_stats_data)
-                st.dataframe(angle_error_stats_df, use_container_width=True, hide_index=True)
+                st.dataframe(angle_error_stats_df, width='stretch', hide_index=True)
             
             with tab1:
                 st.subheader("距离分析")
@@ -648,15 +650,24 @@ def main():
                                      '理论值与实际值距离对比', '距离 (m)', plot_mode=plot_mode, show_fitting=show_fitting)
                 st.plotly_chart(fig1, width='stretch', config={'scrollZoom': False})
                 
-                fig2 = plot_error(filtered_df, 'timestamp', 'distance_error', 
-                                '距离误差（实际值 - 理论值）', '误差 (m)', bounds=(dist_lower, dist_upper), plot_mode=plot_mode, show_fitting=show_fitting)
-                st.plotly_chart(fig2, width='stretch', config={'scrollZoom': False})
-                
-                # 添加 3D 位置分量合成误差图表
+                # 合并距离误差和3D位置分量合成误差到一个图表
+                distance_error_configs = [
+                    {'col': 'distance_error', 'name': '距离误差', 'color': '#E63946'},
+                ]
                 if 'position_error_3d' in filtered_df.columns:
-                    fig_3d = plot_error(filtered_df, 'timestamp', 'position_error_3d', 
-                                    '3D位置分量合成误差', '误差 (m)', bounds=(dist_lower, dist_upper), plot_mode=plot_mode, show_fitting=show_fitting)
-                    st.plotly_chart(fig_3d, width='stretch', config={'scrollZoom': False})
+                    distance_error_configs.append({'col': 'position_error_3d', 'name': '3D位置分量合成误差', 'color': '#06A77D'})
+                
+                fig_dist_combined = plot_multiple_errors(
+                    filtered_df, 
+                    'timestamp', 
+                    distance_error_configs,
+                    '距离误差（实际值 - 理论值）', 
+                    '误差 (m)',
+                    bounds=(dist_lower, dist_upper),
+                    plot_mode=plot_mode,
+                    show_fitting=show_fitting
+                )
+                st.plotly_chart(fig_dist_combined, width='stretch', config={'scrollZoom': False})
                 
                 # 统计指标显示
                 st.markdown("#### 📊 误差统计指标")
