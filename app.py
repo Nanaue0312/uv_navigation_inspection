@@ -143,7 +143,7 @@ def main():
     # 添加帮助按钮
     col1, col2 = st.columns([6, 1])
     with col2:
-        if st.button("查看字段说明", use_container_width=True):
+        if st.button("查看字段说明", width='stretch'):
             st.session_state.show_help = True
     
     # 如果用户点击了帮助按钮，显示帮助页面
@@ -188,10 +188,10 @@ def main():
                 st.text(f"海况: {scenario.get('sea_state', 'N/A')}")
                 
                 # 添加帮助按钮
-                st.markdown("---")
-                if st.button("查看字段说明帮助", use_container_width=True, type="secondary"):
-                    st.session_state.show_help = True
-                    st.rerun()
+                # st.markdown("---")
+                # if st.button("查看字段说明帮助", width='stretch', type="secondary"):
+                #     st.session_state.show_help = True
+                #     st.rerun()
                 
                 # Plot mode selection
                 st.subheader("图表显示模式")
@@ -205,53 +205,142 @@ def main():
                     key='plot_mode'
                 )
                 
+                # Curve fitting toggle
+                show_fitting = st.toggle(
+                    "显示曲线拟合", 
+                    value=True, 
+                    help="在散点图模式下显示移动平均拟合曲线（30点窗口），可在图例中点击开关"
+                )
+                
                 st.subheader("数据过滤")
                 filter_low_conf = st.toggle("过滤低置信度/异常数据", value=True, help="开启后将隐藏置信度<0.5或算法输出为0的异常点")
                 
                 # Error bound configuration with input fields
                 st.subheader("误差上限/下限配置")
                 
+                # Initialize session state defaults if not already set
+                if 'dist_lower' not in st.session_state:
+                    st.session_state.dist_lower = -1.6
+                if 'dist_upper' not in st.session_state:
+                    st.session_state.dist_upper = 1.6
+                if 'lat_lower' not in st.session_state:
+                    st.session_state.lat_lower = -1.6
+                if 'lat_upper' not in st.session_state:
+                    st.session_state.lat_upper = 1.6
+                if 'lon_lower' not in st.session_state:
+                    st.session_state.lon_lower = -1.6
+                if 'lon_upper' not in st.session_state:
+                    st.session_state.lon_upper = 1.6
+                if 'height_lower' not in st.session_state:
+                    st.session_state.height_lower = -1.6
+                if 'height_upper' not in st.session_state:
+                    st.session_state.height_upper = 1.6
+                if 'dyaw_lower' not in st.session_state:
+                    st.session_state.dyaw_lower = -1.5
+                if 'dyaw_upper' not in st.session_state:
+                    st.session_state.dyaw_upper = 1.5
+                if 'dpitch_lower' not in st.session_state:
+                    st.session_state.dpitch_lower = -1.5
+                if 'dpitch_upper' not in st.session_state:
+                    st.session_state.dpitch_upper = 1.5
+                
+                # Callback functions for preset buttons
+                def set_distance_preset(val):
+                    st.session_state.dist_lower = -val
+                    st.session_state.dist_upper = val
+                    st.session_state.lat_lower = -val
+                    st.session_state.lat_upper = val
+                    st.session_state.lon_lower = -val
+                    st.session_state.lon_upper = val
+                    st.session_state.height_lower = -val
+                    st.session_state.height_upper = val
+                
+                def set_angle_preset(val):
+                    st.session_state.dyaw_lower = -val
+                    st.session_state.dyaw_upper = val
+                    st.session_state.dpitch_lower = -val
+                    st.session_state.dpitch_upper = val
+                
+                # Quick preset buttons - optimized layout
+                st.markdown("**快速配置**")
+                
+                # Distance error presets - first row
+                st.caption("距离误差 (m)")
+                preset_cols_dist = st.columns(6)
+                distance_presets = [3.0, 2.0, 1.6, 1.0, 0.5, 0.2]
+                for idx, preset_val in enumerate(distance_presets):
+                    with preset_cols_dist[idx]:
+                        st.button(f"±{preset_val}", key=f"dist_preset_{preset_val}", 
+                                   help=f"设置所有距离误差为 ±{preset_val}m", 
+                                   on_click=set_distance_preset, args=(preset_val,),
+                                   use_container_width=True)
+                
+                # Angle error presets - second row
+                st.caption("角度误差 (deg)")
+                preset_cols_angle = st.columns(6)
+                angle_presets = [4.0, 3.0, 2.0, 1.5, 1.0, 0.5]
+                for idx, preset_val in enumerate(angle_presets):
+                    with preset_cols_angle[idx]:
+                        st.button(f"±{preset_val}", key=f"angle_preset_{preset_val}", 
+                                   help=f"设置所有角度误差为 ±{preset_val}°", 
+                                   on_click=set_angle_preset, args=(preset_val,),
+                                   use_container_width=True)
+                
+                st.divider()
+                
                 st.markdown("**距离误差 (m)**")
                 col_d1, col_d2 = st.columns(2)
                 with col_d1:
-                    dist_lower = st.number_input("下限", value=-1.6, step=0.1, key="dist_lower")
+                    st.number_input("下限", step=0.1, format="%.1f", key="dist_lower")
                 with col_d2:
-                    dist_upper = st.number_input("上限", value=1.6, step=0.1, key="dist_upper")
+                    st.number_input("上限", step=0.1, format="%.1f", key="dist_upper")
+                dist_lower = st.session_state.dist_lower
+                dist_upper = st.session_state.dist_upper
                 
                 st.markdown("**侧向误差 (m)**")
                 col_l1, col_l2 = st.columns(2)
                 with col_l1:
-                    lat_lower = st.number_input("下限", value=-1.6, step=0.1, key="lat_lower")
+                    st.number_input("下限", step=0.1, format="%.1f", key="lat_lower")
                 with col_l2:
-                    lat_upper = st.number_input("上限", value=1.6, step=0.1, key="lat_upper")
+                    st.number_input("上限", step=0.1, format="%.1f", key="lat_upper")
+                lat_lower = st.session_state.lat_lower
+                lat_upper = st.session_state.lat_upper
                 
                 st.markdown("**纵向误差 (m)**")
                 col_ln1, col_ln2 = st.columns(2)
                 with col_ln1:
-                    lon_lower = st.number_input("下限", value=-1.6, step=0.1, key="lon_lower")
+                    st.number_input("下限", step=0.1, format="%.1f", key="lon_lower")
                 with col_ln2:
-                    lon_upper = st.number_input("上限", value=1.6, step=0.1, key="lon_upper")
+                    st.number_input("上限", step=0.1, format="%.1f", key="lon_upper")
+                lon_lower = st.session_state.lon_lower
+                lon_upper = st.session_state.lon_upper
                 
                 st.markdown("**高度误差 (m)**")
                 col_h1, col_h2 = st.columns(2)
                 with col_h1:
-                    height_lower = st.number_input("下限", value=-1.6, step=0.1, key="height_lower")
+                    st.number_input("下限", step=0.1, format="%.1f", key="height_lower")
                 with col_h2:
-                    height_upper = st.number_input("上限", value=1.6, step=0.1, key="height_upper")
+                    st.number_input("上限", step=0.1, format="%.1f", key="height_upper")
+                height_lower = st.session_state.height_lower
+                height_upper = st.session_state.height_upper
                 
                 st.markdown("**偏航光轴偏差角 (deg)**")
                 col_yaw1, col_yaw2 = st.columns(2)
                 with col_yaw1:
-                    dyaw_lower = st.number_input("下限", value=-1.5, step=0.1, key="dyaw_lower")
+                    st.number_input("下限", step=0.1, format="%.1f", key="dyaw_lower")
                 with col_yaw2:
-                    dyaw_upper = st.number_input("上限", value=1.5, step=0.1, key="dyaw_upper")
+                    st.number_input("上限", step=0.1, format="%.1f", key="dyaw_upper")
+                dyaw_lower = st.session_state.dyaw_lower
+                dyaw_upper = st.session_state.dyaw_upper
                 
                 st.markdown("**俯仰光轴偏差角 (deg)**")
                 col_pitch1, col_pitch2 = st.columns(2)
                 with col_pitch1:
-                    dpitch_lower = st.number_input("下限", value=-1.5, step=0.1, key="dpitch_lower")
+                    st.number_input("下限", step=0.1, format="%.1f", key="dpitch_lower")
                 with col_pitch2:
-                    dpitch_upper = st.number_input("上限", value=1.5, step=0.1, key="dpitch_upper")
+                    st.number_input("上限", step=0.1, format="%.1f", key="dpitch_upper")
+                dpitch_lower = st.session_state.dpitch_lower
+                dpitch_upper = st.session_state.dpitch_upper
 
 
             # 原始完整数据（不做修改）
@@ -387,7 +476,7 @@ def main():
             
             # 显示统计表格
             stats_df = pd.DataFrame(stats_data)
-            st.dataframe(stats_df, use_container_width=True, hide_index=True)
+            st.dataframe(stats_df, width='stretch', hide_index=True)
             
             st.markdown("""
             **说明**：
@@ -436,17 +525,17 @@ def main():
                 st.subheader("距离分析")
                 fig1 = plot_comparison(filtered_df, 'timestamp', 'gt_distance', 'algo_distance', 
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)', 
-                                     '理论值与实际值距离对比', '距离 (m)', plot_mode=plot_mode)
+                                     '理论值与实际值距离对比', '距离 (m)', plot_mode=plot_mode, show_fitting=show_fitting)
                 st.plotly_chart(fig1, width='stretch', config={'scrollZoom': False})
                 
                 fig2 = plot_error(filtered_df, 'timestamp', 'distance_error', 
-                                '距离误差（实际值 - 理论值）', '误差 (m)', bounds=(dist_lower, dist_upper), plot_mode=plot_mode)
+                                '距离误差（实际值 - 理论值）', '误差 (m)', bounds=(dist_lower, dist_upper), plot_mode=plot_mode, show_fitting=show_fitting)
                 st.plotly_chart(fig2, width='stretch', config={'scrollZoom': False})
                 
                 # 添加 3D 位置分量合成误差图表
                 if 'position_error_3d' in filtered_df.columns:
                     fig_3d = plot_error(filtered_df, 'timestamp', 'position_error_3d', 
-                                    '3D位置分量合成误差', '误差 (m)', bounds=(dist_lower, dist_upper), plot_mode=plot_mode)
+                                    '3D位置分量合成误差', '误差 (m)', bounds=(dist_lower, dist_upper), plot_mode=plot_mode, show_fitting=show_fitting)
                     st.plotly_chart(fig_3d, width='stretch', config={'scrollZoom': False})
                 
                 # 统计指标显示
@@ -479,11 +568,11 @@ def main():
                 st.subheader("侧向位置分析")
                 fig3 = plot_comparison(filtered_df, 'timestamp', 'gt_lateral', 'algo_lateral',
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)',
-                                     '理论值与实际值侧向对比', '侧向距离 (m)', plot_mode=plot_mode)
+                                     '理论值与实际值侧向对比', '侧向距离 (m)', plot_mode=plot_mode, show_fitting=show_fitting)
                 st.plotly_chart(fig3, width='stretch', config={'scrollZoom': False})
                 
                 fig4 = plot_error(filtered_df, 'timestamp', 'lateral_error',
-                                '侧向误差（实际值 - 理论值）', '误差 (m)', bounds=(lat_lower, lat_upper), plot_mode=plot_mode)
+                                '侧向误差（实际值 - 理论值）', '误差 (m)', bounds=(lat_lower, lat_upper), plot_mode=plot_mode, show_fitting=show_fitting)
                 st.plotly_chart(fig4, width='stretch', config={'scrollZoom': False})
                 
                 # 统计指标显示
@@ -502,11 +591,11 @@ def main():
                 st.subheader("纵向位置分析")
                 fig5 = plot_comparison(filtered_df, 'timestamp', 'gt_longitudinal', 'algo_longitudinal',
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)',
-                                     '理论值与实际值纵向对比', '纵向距离 (m)', plot_mode=plot_mode)
+                                     '理论值与实际值纵向对比', '纵向距离 (m)', plot_mode=plot_mode, show_fitting=show_fitting)
                 st.plotly_chart(fig5, width='stretch', config={'scrollZoom': False})
                 
                 fig6 = plot_error(filtered_df, 'timestamp', 'longitudinal_error',
-                                '纵向误差（实际值 - 理论值）', '误差 (m)', bounds=(lon_lower, lon_upper), plot_mode=plot_mode)
+                                '纵向误差（实际值 - 理论值）', '误差 (m)', bounds=(lon_lower, lon_upper), plot_mode=plot_mode, show_fitting=show_fitting)
                 st.plotly_chart(fig6, width='stretch', config={'scrollZoom': False})
                 
                 # 统计指标显示
@@ -525,11 +614,11 @@ def main():
                 st.subheader("高度分析")
                 fig7 = plot_comparison(filtered_df, 'timestamp', 'gt_height', 'algo_height',
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)',
-                                     '理论值与实际值高度对比', '高度 (m)', plot_mode=plot_mode)
+                                     '理论值与实际值高度对比', '高度 (m)', plot_mode=plot_mode, show_fitting=show_fitting)
                 st.plotly_chart(fig7, width='stretch', config={'scrollZoom': False})
                 
                 fig8 = plot_error(filtered_df, 'timestamp', 'height_error',
-                                '高度误差（实际值 - 理论值）', '误差 (m)', bounds=(height_lower, height_upper), plot_mode=plot_mode)
+                                '高度误差（实际值 - 理论值）', '误差 (m)', bounds=(height_lower, height_upper), plot_mode=plot_mode, show_fitting=show_fitting)
                 st.plotly_chart(fig8, width='stretch', config={'scrollZoom': False})
                 
                 # 统计指标显示
@@ -551,12 +640,12 @@ def main():
                 # 显示真值与算法输出的对比
                 fig9 = plot_comparison(filtered_df, 'timestamp', 'gt_dyaw', 'algo_dyaw',
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)',
-                                     '理论值与实际值偏航光轴偏差角对比', '偏差角 (deg)', plot_mode=plot_mode)
+                                     '理论值与实际值偏航光轴偏差角对比', '偏差角 (deg)', plot_mode=plot_mode, show_fitting=show_fitting)
                 st.plotly_chart(fig9, width='stretch', config={'scrollZoom': False})
                 
                 # 显示误差图
                 fig9_err = plot_error(filtered_df, 'timestamp', 'dyaw_error',
-                                '偏航光轴偏差角误差（实际值 - 理论值）', '误差 (deg)', bounds=(dyaw_lower, dyaw_upper), plot_mode=plot_mode)
+                                '偏航光轴偏差角误差（实际值 - 理论值）', '误差 (deg)', bounds=(dyaw_lower, dyaw_upper), plot_mode=plot_mode, show_fitting=show_fitting)
                 st.plotly_chart(fig9_err, width='stretch', config={'scrollZoom': False})
                 
                 # 统计指标显示
@@ -578,12 +667,12 @@ def main():
                 # 显示真值与算法输出的对比
                 fig10 = plot_comparison(filtered_df, 'timestamp', 'gt_dpitch', 'algo_dpitch',
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)',
-                                     '理论值与实际值俯仰光轴偏差角对比', '偏差角 (deg)', plot_mode=plot_mode)
+                                     '理论值与实际值俯仰光轴偏差角对比', '偏差角 (deg)', plot_mode=plot_mode, show_fitting=show_fitting)
                 st.plotly_chart(fig10, width='stretch', config={'scrollZoom': False})
                 
                 # 显示误差图
                 fig10_err = plot_error(filtered_df, 'timestamp', 'dpitch_error',
-                                 '俯仰光轴偏差角误差（实际值 - 理论值）', '误差 (deg)', bounds=(dpitch_lower, dpitch_upper), plot_mode=plot_mode)
+                                 '俯仰光轴偏差角误差（实际值 - 理论值）', '误差 (deg)', bounds=(dpitch_lower, dpitch_upper), plot_mode=plot_mode, show_fitting=show_fitting)
                 st.plotly_chart(fig10_err, width='stretch', config={'scrollZoom': False})
 
                 # 统计指标显示
@@ -768,7 +857,7 @@ def main():
                 styled_df = styled_df.format(format_dict)
                 
                 # 显示表格
-                st.dataframe(styled_df, use_container_width=True, height=600)
+                st.dataframe(styled_df, width='stretch', height=600)
 
         except Exception as e:
             st.error(f"处理文件时出错: {e}")
