@@ -78,7 +78,7 @@ def show_help_page():
     help_data_distance = [
         ("真值距离 (m)", "无人机与目标之间实际距离的真实值，单位为米"),
         ("算法距离 (m)", "通过算法计算得到的无人机与目标之间的距离，单位为米"),
-        ("距离误差 (m)", '"算法距离" 与 "真值距离" 的差值，用于评估算法的距离计算精度'),
+        ("直接距离误差 (m)", '"算法距离" 与 "真值距离" 的差值，用于评估算法的距离计算精度'),
     ]
     for field, desc in help_data_distance:
         st.markdown(f"**{field}**: {desc}")
@@ -140,20 +140,6 @@ def show_help_page():
 def main():
     st.title("紫外定位数据分析")
     st.markdown("上传 `analysis_data.json` 文件以生成性能评估图表。")
-    
-    # 添加帮助按钮
-    col1, col2 = st.columns([6, 1])
-    with col2:
-        if st.button("查看字段说明", width='stretch'):
-            st.session_state.show_help = True
-    
-    # 如果用户点击了帮助按钮，显示帮助页面
-    if st.session_state.get('show_help', False):
-        show_help_page()
-        if st.button("返回主页"):
-            st.session_state.show_help = False
-            st.rerun()
-        return
     
     uploaded_file = st.file_uploader("选择数据文件 (JSON)", type=['json'])
     
@@ -266,13 +252,13 @@ def main():
                 st.markdown("**快速配置**")
                 
                 # Distance error presets - first row
-                st.caption("距离误差 (m)")
+                st.caption("直接距离误差 (m)")
                 preset_cols_dist = st.columns(6)
                 distance_presets = [3.0, 2.0, 1.6, 1.0, 0.5, 0.2]
                 for idx, preset_val in enumerate(distance_presets):
                     with preset_cols_dist[idx]:
                         st.button(f"±{preset_val}", key=f"dist_preset_{preset_val}", 
-                                   help=f"设置所有距离误差为 ±{preset_val}m", 
+                                   help=f"设置所有直接距离误差为 ±{preset_val}m", 
                                    on_click=set_distance_preset, args=(preset_val,),
                                    width='stretch')
                 
@@ -289,7 +275,7 @@ def main():
                 
                 st.divider()
                 
-                st.markdown("**距离误差 (m)**")
+                st.markdown("**直接距离误差 (m)**")
                 col_d1, col_d2 = st.columns(2)
                 with col_d1:
                     st.number_input("下限", step=0.1, format="%.1f", key="dist_lower")
@@ -508,8 +494,8 @@ def main():
                 
                 st.subheader("收敛指标")
                 st.markdown("""
-                - **初始距离误差**: `{:.2f} m` - 仿真开始时算法输出与真实值之间的距离误差
-                - **最终距离误差**: `{:.2f} m` - 仿真结束时算法输出与真实值之间的距离误差
+                - **初始直接距离误差**: `{:.2f} m` - 仿真开始时算法输出与真实值之间的直接距离误差
+                - **最终直接距离误差**: `{:.2f} m` - 仿真结束时算法输出与真实值之间的直接距离误差
                 - **收敛时间**: `{:.2f} s` - 算法从初始状态收敛到稳定状态所需的时间
                 - **稳态误差**: `{:.2f} m` - 算法收敛后在稳定状态下的平均误差水平
                 """.format(
@@ -520,7 +506,7 @@ def main():
                 ))
             
             # Tabs for analysis
-            tab0, tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["综合分析", "距离分析", "侧向分析", "纵向分析", "高度分析", "偏航光轴偏差角", "俯仰光轴偏差角", "原始数据"])
+            tab0, tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["综合分析", "距离分析(d)", "侧向分析(x)", "纵向分析(y)", "高度分析(z)", "偏航光轴偏差角(dy)", "俯仰光轴偏差角(dp)", "原始数据"])
             
             with tab0:
                 st.subheader("综合分析")
@@ -650,18 +636,18 @@ def main():
                                      '理论值与实际值距离对比', '距离 (m)', plot_mode=plot_mode, show_fitting=show_fitting)
                 st.plotly_chart(fig1, width='stretch', config={'scrollZoom': False})
                 
-                # 合并距离误差和3D位置分量合成误差到一个图表
+                # 合并距离误差和分量合成误差到一个图表
                 distance_error_configs = [
-                    {'col': 'distance_error', 'name': '距离误差', 'color': '#E63946'},
+                    {'col': 'distance_error', 'name': '直接距离误差', 'color': '#E63946'},
                 ]
                 if 'position_error_3d' in filtered_df.columns:
-                    distance_error_configs.append({'col': 'position_error_3d', 'name': '3D位置分量合成误差', 'color': '#06A77D'})
+                    distance_error_configs.append({'col': 'position_error_3d', 'name': '分量合成误差', 'color': '#06A77D'})
                 
                 fig_dist_combined = plot_multiple_errors(
                     filtered_df, 
                     'timestamp', 
                     distance_error_configs,
-                    '距离误差（实际值 - 理论值）', 
+                    '直接距离误差（实际值 - 理论值）', 
                     '误差 (m)',
                     bounds=(dist_lower, dist_upper),
                     plot_mode=plot_mode,
@@ -889,8 +875,8 @@ def main():
                     'timestamp': '时间(s)',
                     'gt_distance': '真值距离(m)',
                     'algo_distance': '算法距离(m)',
-                    'distance_error': '距离误差(m)',
-                    'position_error_3d': '3D位置分量合成误差(m)',
+                    'distance_error': '直接距离误差(m)',
+                    'position_error_3d': '分量合成误差(m)',
                     'gt_lateral': '真值侧向(m)',
                     'algo_lateral': '算法侧向(m)',
                     'lateral_error': '侧向误差(m)',
@@ -947,7 +933,7 @@ def main():
                 def highlight_row(row):
                     # 获取原始列名对应的显示列名
                     conf_col = '置信度'
-                    dist_err_col = '距离误差(m)'
+                    dist_err_col = '直接距离误差(m)'
                     lat_err_col = '侧向误差(m)'
                     lon_err_col = '纵向误差(m)'
                     height_err_col = '高度误差(m)'
@@ -989,6 +975,63 @@ def main():
                 
                 # 显示表格
                 st.dataframe(styled_df, width='stretch', height=600)
+                
+                # 字段说明
+                st.markdown("---")
+                st.subheader("📖 字段说明")
+                
+                with st.expander("**基本信息**", expanded=False):
+                    st.markdown("""
+                    - **No**: 当前行行号
+                    - **image_path**: 对应图片的路径（相对于数据集根目录），用于关联数据与对应的图像文件
+                    """)
+                
+                with st.expander("**距离测量**", expanded=False):
+                    st.markdown("""
+                    - **真值距离 (m)**: 无人机与目标之间实际距离的真实值，单位为米
+                    - **算法距离 (m)**: 通过算法计算得到的无人机与目标之间的距离，单位为米
+                    - **直接距离误差 (m)**: "算法距离" 与 "真值距离" 的差值，用于评估算法的距离计算精度
+                    """)
+                
+                with st.expander("**侧向位置测量**", expanded=False):
+                    st.markdown("""
+                    - **真值侧向 (m)**: 无人机与目标在侧向（通常对应 NED 坐标系 Y 轴）相对位置的真实值，单位为米
+                    - **算法侧向 (m)**: 通过算法计算得到的无人机与目标在侧向的相对位置，单位为米
+                    - **侧向误差 (m)**: "算法侧向" 与 "真值侧向" 的差值，用于评估算法的侧向位置计算精度
+                    """)
+                
+                with st.expander("**纵向位置测量**", expanded=False):
+                    st.markdown("""
+                    - **真值纵向 (m)**: 无人机与目标在纵向（通常对应 NED 坐标系 X 轴）相对位置的真实值，单位为米
+                    - **算法纵向 (m)**: 通过算法计算得到的无人机与目标在纵向的相对位置，单位为米
+                    - **纵向误差 (m)**: "算法纵向" 与 "真值纵向" 的差值，用于评估算法的纵向位置计算精度
+                    """)
+                
+                with st.expander("**高度位置测量**", expanded=False):
+                    st.markdown("""
+                    - **真值高度 (m)**: 无人机与目标在高度方向（通常对应 NED 坐标系 Z 轴）相对位置的真实值，单位为米
+                    - **算法高度 (m)**: 通过算法计算得到的无人机与目标在高度方向的相对位置，单位为米
+                    - **高度误差 (m)**: "算法高度" 与 "真值高度" 的差值，用于评估算法的高度计算精度
+                    """)
+                
+                with st.expander("**偏航光轴偏差角测量**", expanded=False):
+                    st.markdown("""
+                    - **真值偏航光轴偏差角(°)**: 目标偏航角的真实变化量
+                    - **算法偏航光轴偏差角(°)**: 算法计算得到的目标偏航角变化量
+                    - **偏航误差 (°)**: 算法计算的偏航角与真实偏航角的差值，单位为度，用于评估姿态计算精度
+                    """)
+                
+                with st.expander("**俯仰光轴偏差角测量**", expanded=False):
+                    st.markdown("""
+                    - **真值俯仰光轴偏差角(°)**: 目标俯仰角的真实变化量
+                    - **算法俯仰光轴偏差角(°)**: 算法计算得到的目标俯仰角变化量
+                    - **俯仰误差 (°)**: 算法计算的俯仰角与真实俯仰角的差值，单位为度，用于评估姿态计算精度
+                    """)
+                
+                with st.expander("**算法输出质量**", expanded=False):
+                    st.markdown("""
+                    - **置信度**: 算法输出结果的可靠程度（通常为 0-1），置信度越高代表结果越可靠
+                    """)
 
         except Exception as e:
             st.error(f"处理文件时出错: {e}")
