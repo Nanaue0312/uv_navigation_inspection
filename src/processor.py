@@ -50,6 +50,7 @@ def process_frames(frames: List[Dict[str, Any]]) -> pd.DataFrame:
         h_err = err.get('height_error')
         dyaw_err = err.get('dyaw_error', 0.0)      # 偏航光轴偏差角误差 (度)
         dpitch_err = err.get('dpitch_error', 0.0)  # 俯仰光轴偏差角误差 (度)
+        position_err_3d = err.get('position_error_3d')  # 3D位置误差（分量合成误差）
 
         data_list.append({
             'timestamp': timestamp,
@@ -73,6 +74,7 @@ def process_frames(frames: List[Dict[str, Any]]) -> pd.DataFrame:
             'algo_dpitch': algo_dpitch,  # 算法输出的俯仰光轴偏差角
             'dyaw_error': dyaw_err,      # 偏航光轴偏差角误差
             'dpitch_error': dpitch_err,   # 俯仰光轴偏差角误差
+            'position_error_3d': position_err_3d,  # 3D位置误差
             'algo_confidence': algo.get('confidence', 1.0), # 算法置信度
             'image_path': frame.get('image_path', ''),      # 图片完整路径
             'image_name': os.path.basename(frame.get('image_path', '')) # 图片文件名

@@ -212,6 +212,7 @@ uv run pytest tests/
 - **[数据格式规范](docs/ANALYSIS_DATA_FORMAT.md)** - JSON 数据结构详细说明
 - **[分析工具说明](docs/README_ANALYSIS.md)** - 工具使用和分析方法
 - **[打包部署文档](docs/README_PACKAGING.md)** - 详细的打包和分发指南
+ - **[用户指南](docs/USER_GUIDE.md)** - 使用说明与界面功能介绍
 
 ## 🛠️ 技术栈
 

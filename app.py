@@ -443,6 +443,12 @@ def main():
                                 '距离误差（实际值 - 理论值）', '误差 (m)', bounds=(dist_lower, dist_upper), plot_mode=plot_mode)
                 st.plotly_chart(fig2, width='stretch', config={'scrollZoom': False})
                 
+                # 添加 3D 位置分量合成误差图表
+                if 'position_error_3d' in filtered_df.columns:
+                    fig_3d = plot_error(filtered_df, 'timestamp', 'position_error_3d', 
+                                    '3D位置分量合成误差', '误差 (m)', bounds=(dist_lower, dist_upper), plot_mode=plot_mode)
+                    st.plotly_chart(fig_3d, width='stretch', config={'scrollZoom': False})
+                
                 # 统计指标显示
                 st.markdown("#### 📊 误差统计指标")
                 dist_errors = filtered_df['distance_error'].dropna()
@@ -454,6 +460,20 @@ def main():
                 with stat_col3:
                     rms = np.sqrt((dist_errors**2).mean())
                     st.metric("RMS (均方根误差)", f"{rms:.4f} m")
+                
+                # 添加 3D 位置误差统计
+                if 'position_error_3d' in filtered_df.columns:
+                    st.markdown("#### 📊 3D位置误差统计")
+                    pos_3d_errors = filtered_df['position_error_3d'].dropna()
+                    if len(pos_3d_errors) > 0:
+                        stat_col1, stat_col2, stat_col3 = st.columns(3)
+                        with stat_col1:
+                            st.metric("最大3D误差", f"{pos_3d_errors.max():.4f} m")
+                        with stat_col2:
+                            st.metric("最小3D误差", f"{pos_3d_errors.min():.4f} m")
+                        with stat_col3:
+                            rms_3d = np.sqrt((pos_3d_errors**2).mean())
+                            st.metric("3D RMS", f"{rms_3d:.4f} m")
                 
             with tab2:
                 st.subheader("侧向位置分析")
@@ -650,6 +670,7 @@ def main():
                     'gt_distance': '真值距离(m)',
                     'algo_distance': '算法距离(m)',
                     'distance_error': '距离误差(m)',
+                    'position_error_3d': '3D位置分量合成误差(m)',
                     'gt_lateral': '真值侧向(m)',
                     'algo_lateral': '算法侧向(m)',
                     'lateral_error': '侧向误差(m)',
