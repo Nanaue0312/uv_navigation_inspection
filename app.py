@@ -4,6 +4,7 @@ import pandas as pd
 from src.data_loader import load_data
 from src.processor import process_frames
 from src.visualizer import plot_comparison, plot_error
+from src.visualizer_ext import plot_multiple_errors
 
 st.set_page_config(page_title="算法性能评估工具", layout="wide")
 
@@ -519,7 +520,126 @@ def main():
                 ))
             
             # Tabs for analysis
-            tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["距离分析", "侧向分析", "纵向分析", "高度分析", "偏航光轴偏差角", "俯仰光轴偏差角", "原始数据"])
+            tab0, tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["综合分析", "距离分析", "侧向分析", "纵向分析", "高度分析", "偏航光轴偏差角", "俯仰光轴偏差角", "原始数据"])
+            
+            with tab0:
+                st.subheader("综合分析")
+                
+                # ========== 位置综合分析 ==========
+                st.markdown("### 📍 位置误差综合分析")
+                
+                # 配置5个位置误差曲线 - 使用高对比度颜色
+                position_error_configs = [
+                    {'col': 'distance_error', 'name': '直接距离误差', 'color': '#E63946'},      # 鲜红色
+                    {'col': 'position_error_3d', 'name': '分量合成误差', 'color': '#06A77D'},   # 青绿色
+                    {'col': 'lateral_error', 'name': '侧向误差', 'color': '#1D3557'},           # 深蓝色
+                    {'col': 'longitudinal_error', 'name': '纵向误差', 'color': '#F77F00'},      # 橙色
+                    {'col': 'height_error', 'name': '高度误差', 'color': '#9D4EDD'},            # 紫色
+                ]
+                
+                # 绘制位置误差综合对比图
+                fig_pos = plot_multiple_errors(
+                    filtered_df, 
+                    'timestamp', 
+                    position_error_configs,
+                    '位置误差综合对比', 
+                    '误差 (m)',
+                    plot_mode=plot_mode,
+                    show_fitting=show_fitting
+                )
+                st.plotly_chart(fig_pos, use_container_width=True, config={'scrollZoom': False})
+                
+                # 位置误差统计表格
+                st.markdown("#### 📊 位置误差统计汇总")
+                dist_errors = filtered_df['distance_error'].dropna() if 'distance_error' in filtered_df.columns else pd.Series([0])
+                pos_3d_errors = filtered_df['position_error_3d'].dropna() if 'position_error_3d' in filtered_df.columns else pd.Series([0])
+                lat_errors = filtered_df['lateral_error'].dropna() if 'lateral_error' in filtered_df.columns else pd.Series([0])
+                lon_errors = filtered_df['longitudinal_error'].dropna() if 'longitudinal_error' in filtered_df.columns else pd.Series([0])
+                height_errors = filtered_df['height_error'].dropna() if 'height_error' in filtered_df.columns else pd.Series([0])
+                
+                error_stats_data = {
+                    '误差类型': ['直接距离误差', '分量合成误差', '侧向误差', '纵向误差', '高度误差'],
+                    '最大值 (m)': [
+                        f"{dist_errors.max():.4f}" if len(dist_errors) > 0 else "N/A",
+                        f"{pos_3d_errors.max():.4f}" if len(pos_3d_errors) > 0 else "N/A",
+                        f"{lat_errors.max():.4f}" if len(lat_errors) > 0 else "N/A",
+                        f"{lon_errors.max():.4f}" if len(lon_errors) > 0 else "N/A",
+                        f"{height_errors.max():.4f}" if len(height_errors) > 0 else "N/A",
+                    ],
+                    '最小值 (m)': [
+                        f"{dist_errors.min():.4f}" if len(dist_errors) > 0 else "N/A",
+                        f"{pos_3d_errors.min():.4f}" if len(pos_3d_errors) > 0 else "N/A",
+                        f"{lat_errors.min():.4f}" if len(lat_errors) > 0 else "N/A",
+                        f"{lon_errors.min():.4f}" if len(lon_errors) > 0 else "N/A",
+                        f"{height_errors.min():.4f}" if len(height_errors) > 0 else "N/A",
+                    ],
+                    '均值 (m)': [
+                        f"{dist_errors.mean():.4f}" if len(dist_errors) > 0 else "N/A",
+                        f"{pos_3d_errors.mean():.4f}" if len(pos_3d_errors) > 0 else "N/A",
+                        f"{lat_errors.mean():.4f}" if len(lat_errors) > 0 else "N/A",
+                        f"{lon_errors.mean():.4f}" if len(lon_errors) > 0 else "N/A",
+                        f"{height_errors.mean():.4f}" if len(height_errors) > 0 else "N/A",
+                    ],
+                    'RMS (m)': [
+                        f"{np.sqrt((dist_errors**2).mean()):.4f}" if len(dist_errors) > 0 else "N/A",
+                        f"{np.sqrt((pos_3d_errors**2).mean()):.4f}" if len(pos_3d_errors) > 0 else "N/A",
+                        f"{np.sqrt((lat_errors**2).mean()):.4f}" if len(lat_errors) > 0 else "N/A",
+                        f"{np.sqrt((lon_errors**2).mean()):.4f}" if len(lon_errors) > 0 else "N/A",
+                        f"{np.sqrt((height_errors**2).mean()):.4f}" if len(height_errors) > 0 else "N/A",
+                    ],
+                }
+                error_stats_df = pd.DataFrame(error_stats_data)
+                st.dataframe(error_stats_df, use_container_width=True, hide_index=True)
+                
+                st.divider()
+                
+                # ========== 角度综合分析 ==========
+                st.markdown("### 📐 角度误差综合分析")
+                
+                # 配置2个角度误差曲线 - 使用高对比度颜色
+                angle_error_configs = [
+                    {'col': 'dyaw_error', 'name': '偏航光轴偏差角误差', 'color': '#D62828'},      # 深红色
+                    {'col': 'dpitch_error', 'name': '俯仰光轴偏差角误差', 'color': '#0077B6'},    # 深蓝色
+                ]
+                
+                # 绘制角度误差综合对比图
+                fig_angle = plot_multiple_errors(
+                    filtered_df, 
+                    'timestamp', 
+                    angle_error_configs,
+                    '角度误差综合对比', 
+                    '误差 (deg)',
+                    plot_mode=plot_mode,
+                    show_fitting=show_fitting
+                )
+                st.plotly_chart(fig_angle, use_container_width=True, config={'scrollZoom': False})
+                
+                # 角度误差统计表格
+                st.markdown("#### 📊 角度误差统计汇总")
+                dyaw_errors = filtered_df['dyaw_error'].dropna() if 'dyaw_error' in filtered_df.columns else pd.Series([0])
+                dpitch_errors = filtered_df['dpitch_error'].dropna() if 'dpitch_error' in filtered_df.columns else pd.Series([0])
+                
+                angle_error_stats_data = {
+                    '误差类型': ['偏航光轴偏差角误差', '俯仰光轴偏差角误差'],
+                    '最大值 (deg)': [
+                        f"{dyaw_errors.max():.4f}" if len(dyaw_errors) > 0 else "N/A",
+                        f"{dpitch_errors.max():.4f}" if len(dpitch_errors) > 0 else "N/A",
+                    ],
+                    '最小值 (deg)': [
+                        f"{dyaw_errors.min():.4f}" if len(dyaw_errors) > 0 else "N/A",
+                        f"{dpitch_errors.min():.4f}" if len(dpitch_errors) > 0 else "N/A",
+                    ],
+                    '均值 (deg)': [
+                        f"{dyaw_errors.mean():.4f}" if len(dyaw_errors) > 0 else "N/A",
+                        f"{dpitch_errors.mean():.4f}" if len(dpitch_errors) > 0 else "N/A",
+                    ],
+                    'RMS (deg)': [
+                        f"{np.sqrt((dyaw_errors**2).mean()):.4f}" if len(dyaw_errors) > 0 else "N/A",
+                        f"{np.sqrt((dpitch_errors**2).mean()):.4f}" if len(dpitch_errors) > 0 else "N/A",
+                    ],
+                }
+                angle_error_stats_df = pd.DataFrame(angle_error_stats_data)
+                st.dataframe(angle_error_stats_df, use_container_width=True, hide_index=True)
             
             with tab1:
                 st.subheader("距离分析")
