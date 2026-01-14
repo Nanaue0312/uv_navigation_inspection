@@ -367,27 +367,11 @@ def main():
                 elif filtered_len == 0:
                     st.sidebar.warning("过滤后用于图表的数据为空！")
             
-            # Summary Metrics using statistics from JSON
-            st.header("📈 概要统计")
-            
+            # 概要统计部分已删除（应用户要求）
             exec_stats = statistics.get('execution', {})
             algo_perf = statistics.get('algorithm_performance', {})
             err_stats = statistics.get('error_statistics', {})
             conv_metrics = statistics.get('convergence_metrics', {})
-            
-            col1, col2, col3, col4 = st.columns(4)
-            col1.metric("总帧数", exec_stats.get('total_frames', len(filtered_df)))
-            col2.metric("成功率", f"{exec_stats.get('success_rate', 0)*100:.1f}%")
-            
-            # Use pre-calculated RMSE from statistics
-            dist_rmse = err_stats.get('distance', {}).get('rmse', 0)
-            col3.metric("距离RMSE", f"{dist_rmse:.3f} m")
-            
-            lat_rmse = err_stats.get('lateral', {}).get('rmse', 0)
-            lon_rmse = err_stats.get('longitudinal', {}).get('rmse', 0)
-            h_rmse = err_stats.get('height', {}).get('rmse', 0)
-            pos_rmse_3d = np.sqrt(lat_rmse**2 + lon_rmse**2 + h_rmse**2)
-            col4.metric("位置RMSE(3D)", f"{pos_rmse_3d:.3f} m")
             
             # 距离区间误差阈值统计 - 暂时隐藏
             # st.header("📋 RMS达标统计")
@@ -490,38 +474,7 @@ def main():
             # - 只有当样本同时满足角度误差和位置误差的所有条件时，才计入达标样本
             # """)
             
-            # Display additional statistics
-            with st.expander("📊 详细统计信息"):
-                st.markdown("##### 📌 计算方式说明")
-                st.info("""
-                **RMSE (均方根误差)**: 衡量误差大小的指标，公式为 √(Σ(误差²)/N)  
-                **平均置信度**: 算法输出置信度的平均值 (0-1之间)  
-                **收敛时间**: 误差收敛到稳态阈值所需的时间  
-                """)
-                
-                st.subheader("算法性能")
-                st.markdown("""
-                - **平均置信度**: `{:.3f}` - 算法对其输出结果的平均信心程度，范围0-1，越接近1表示算法越确信其结果准确
-                - **平均处理时间**: `{:.2f} ms` - 算法处理单帧数据所需的平均时间，反映算法的实时性能
-                - **最大处理时间**: `{:.2f} ms` - 算法处理单帧数据的最长耗时，用于评估最坏情况下的性能
-                """.format(
-                    algo_perf.get('average_confidence', 0),
-                    algo_perf.get('average_processing_time_ms', 0),
-                    algo_perf.get('max_processing_time_ms', 0)
-                ))
-                
-                st.subheader("收敛指标")
-                st.markdown("""
-                - **初始直接距离误差**: `{:.2f} m` - 仿真开始时算法输出与真实值之间的直接距离误差
-                - **最终直接距离误差**: `{:.2f} m` - 仿真结束时算法输出与真实值之间的直接距离误差
-                - **收敛时间**: `{:.2f} s` - 算法从初始状态收敛到稳定状态所需的时间
-                - **稳态误差**: `{:.2f} m` - 算法收敛后在稳定状态下的平均误差水平
-                """.format(
-                    conv_metrics.get('initial_distance_error', 0),
-                    conv_metrics.get('final_distance_error', 0),
-                    conv_metrics.get('convergence_time_s', 0),
-                    conv_metrics.get('steady_state_error', 0)
-                ))
+            # 详细统计信息已应用户要求删除
             
             # Tabs for analysis
             tab0, tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(["综合分析", "距离分析(d)", "侧向分析(x)", "纵向分析(y)", "高度分析(z)", "偏航光轴偏差角(dy)", "俯仰光轴偏差角(dp)", "原始数据"])
