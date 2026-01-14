@@ -196,8 +196,26 @@ def main():
                 show_fitting = st.toggle(
                     "显示曲线拟合", 
                     value=True, 
-                    help="在散点图模式下显示移动平均拟合曲线（30点窗口），可在图例中点击开关"
+                    help="同时显示滑动平均和SavGol滤波拟合（更适合误差数据）"
                 )
+                
+                # Curve fitting parameters
+                if show_fitting:
+                    fitting_window = st.slider(
+                        "拟合窗口大小",
+                        min_value=3,
+                        max_value=50,
+                        value=10,
+                        step=1,
+                        help="窗口越小越贴近原始数据，越大越平滑"
+                    )
+                else:
+                    fitting_window = 10
+                
+                # 固定参数（不再对用户暴露）
+                poly_degree = 3  # SavGol滤波和多项式拟合的默认次数
+                # 保留兼容性参数
+                fitting_method = 'moving_average'  # 不再使用，但保留参数传递
                 
                 st.subheader("数据过滤")
                 filter_low_conf = st.toggle("过滤低置信度/异常数据", value=True, help="开启后将隐藏置信度<0.5或算法输出为0的异常点")
@@ -633,7 +651,7 @@ def main():
                 st.subheader("距离分析")
                 fig1 = plot_comparison(filtered_df, 'timestamp', 'gt_distance', 'algo_distance', 
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)', 
-                                     '理论值与实际值距离对比', '距离 (m)', plot_mode=plot_mode, show_fitting=show_fitting)
+                                     '理论值与实际值距离对比', '距离 (m)', plot_mode=plot_mode, show_fitting=show_fitting, fitting_method=fitting_method, fitting_window=fitting_window, poly_degree=poly_degree)
                 st.plotly_chart(fig1, width='stretch', config={'scrollZoom': False})
                 
                 # 合并距离误差和分量合成误差到一个图表
@@ -685,11 +703,11 @@ def main():
                 st.subheader("侧向位置分析")
                 fig3 = plot_comparison(filtered_df, 'timestamp', 'gt_lateral', 'algo_lateral',
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)',
-                                     '理论值与实际值侧向对比', '侧向距离 (m)', plot_mode=plot_mode, show_fitting=show_fitting)
+                                     '理论值与实际值侧向对比', '侧向距离 (m)', plot_mode=plot_mode, show_fitting=show_fitting, fitting_method=fitting_method, fitting_window=fitting_window, poly_degree=poly_degree)
                 st.plotly_chart(fig3, width='stretch', config={'scrollZoom': False})
                 
                 fig4 = plot_error(filtered_df, 'timestamp', 'lateral_error',
-                                '侧向误差（实际值 - 理论值）', '误差 (m)', bounds=(lat_lower, lat_upper), plot_mode=plot_mode, show_fitting=show_fitting)
+                                '侧向误差（实际值 - 理论值）', '误差 (m)', bounds=(lat_lower, lat_upper), plot_mode=plot_mode, show_fitting=show_fitting, fitting_method=fitting_method, fitting_window=fitting_window, poly_degree=poly_degree)
                 st.plotly_chart(fig4, width='stretch', config={'scrollZoom': False})
                 
                 # 统计指标显示
@@ -708,11 +726,11 @@ def main():
                 st.subheader("纵向位置分析")
                 fig5 = plot_comparison(filtered_df, 'timestamp', 'gt_longitudinal', 'algo_longitudinal',
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)',
-                                     '理论值与实际值纵向对比', '纵向距离 (m)', plot_mode=plot_mode, show_fitting=show_fitting)
+                                     '理论值与实际值纵向对比', '纵向距离 (m)', plot_mode=plot_mode, show_fitting=show_fitting, fitting_method=fitting_method, fitting_window=fitting_window, poly_degree=poly_degree)
                 st.plotly_chart(fig5, width='stretch', config={'scrollZoom': False})
                 
                 fig6 = plot_error(filtered_df, 'timestamp', 'longitudinal_error',
-                                '纵向误差（实际值 - 理论值）', '误差 (m)', bounds=(lon_lower, lon_upper), plot_mode=plot_mode, show_fitting=show_fitting)
+                                '纵向误差（实际值 - 理论值）', '误差 (m)', bounds=(lon_lower, lon_upper), plot_mode=plot_mode, show_fitting=show_fitting, fitting_method=fitting_method, fitting_window=fitting_window, poly_degree=poly_degree)
                 st.plotly_chart(fig6, width='stretch', config={'scrollZoom': False})
                 
                 # 统计指标显示
@@ -731,11 +749,11 @@ def main():
                 st.subheader("高度分析")
                 fig7 = plot_comparison(filtered_df, 'timestamp', 'gt_height', 'algo_height',
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)',
-                                     '理论值与实际值高度对比', '高度 (m)', plot_mode=plot_mode, show_fitting=show_fitting)
+                                     '理论值与实际值高度对比', '高度 (m)', plot_mode=plot_mode, show_fitting=show_fitting, fitting_method=fitting_method, fitting_window=fitting_window, poly_degree=poly_degree)
                 st.plotly_chart(fig7, width='stretch', config={'scrollZoom': False})
                 
                 fig8 = plot_error(filtered_df, 'timestamp', 'height_error',
-                                '高度误差（实际值 - 理论值）', '误差 (m)', bounds=(height_lower, height_upper), plot_mode=plot_mode, show_fitting=show_fitting)
+                                '高度误差（实际值 - 理论值）', '误差 (m)', bounds=(height_lower, height_upper), plot_mode=plot_mode, show_fitting=show_fitting, fitting_method=fitting_method, fitting_window=fitting_window, poly_degree=poly_degree)
                 st.plotly_chart(fig8, width='stretch', config={'scrollZoom': False})
                 
                 # 统计指标显示
@@ -757,12 +775,12 @@ def main():
                 # 显示真值与算法输出的对比
                 fig9 = plot_comparison(filtered_df, 'timestamp', 'gt_dyaw', 'algo_dyaw',
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)',
-                                     '理论值与实际值偏航光轴偏差角对比', '偏差角 (deg)', plot_mode=plot_mode, show_fitting=show_fitting)
+                                     '理论值与实际值偏航光轴偏差角对比', '偏差角 (deg)', plot_mode=plot_mode, show_fitting=show_fitting, fitting_method=fitting_method, fitting_window=fitting_window, poly_degree=poly_degree)
                 st.plotly_chart(fig9, width='stretch', config={'scrollZoom': False})
                 
                 # 显示误差图
                 fig9_err = plot_error(filtered_df, 'timestamp', 'dyaw_error',
-                                '偏航光轴偏差角误差（实际值 - 理论值）', '误差 (deg)', bounds=(dyaw_lower, dyaw_upper), plot_mode=plot_mode, show_fitting=show_fitting)
+                                '偏航光轴偏差角误差（实际值 - 理论值）', '误差 (deg)', bounds=(dyaw_lower, dyaw_upper), plot_mode=plot_mode, show_fitting=show_fitting, fitting_method=fitting_method, fitting_window=fitting_window, poly_degree=poly_degree)
                 st.plotly_chart(fig9_err, width='stretch', config={'scrollZoom': False})
                 
                 # 统计指标显示
@@ -784,12 +802,12 @@ def main():
                 # 显示真值与算法输出的对比
                 fig10 = plot_comparison(filtered_df, 'timestamp', 'gt_dpitch', 'algo_dpitch',
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)',
-                                     '理论值与实际值俯仰光轴偏差角对比', '偏差角 (deg)', plot_mode=plot_mode, show_fitting=show_fitting)
+                                     '理论值与实际值俯仰光轴偏差角对比', '偏差角 (deg)', plot_mode=plot_mode, show_fitting=show_fitting, fitting_method=fitting_method, fitting_window=fitting_window, poly_degree=poly_degree)
                 st.plotly_chart(fig10, width='stretch', config={'scrollZoom': False})
                 
                 # 显示误差图
                 fig10_err = plot_error(filtered_df, 'timestamp', 'dpitch_error',
-                                 '俯仰光轴偏差角误差（实际值 - 理论值）', '误差 (deg)', bounds=(dpitch_lower, dpitch_upper), plot_mode=plot_mode, show_fitting=show_fitting)
+                                 '俯仰光轴偏差角误差（实际值 - 理论值）', '误差 (deg)', bounds=(dpitch_lower, dpitch_upper), plot_mode=plot_mode, show_fitting=show_fitting, fitting_method=fitting_method, fitting_window=fitting_window, poly_degree=poly_degree)
                 st.plotly_chart(fig10_err, width='stretch', config={'scrollZoom': False})
 
                 # 统计指标显示

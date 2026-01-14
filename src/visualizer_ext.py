@@ -1,11 +1,13 @@
 """扩展的可视化功能 - 多曲线对比图表"""
 import plotly.graph_objects as go
 import pandas as pd
+from .visualizer import _apply_fitting
 
 
 def plot_multiple_errors(df: pd.DataFrame, x_col: str, error_configs: list, 
                         title: str, ylabel: str, bounds: tuple = None,
-                        x_range: tuple = None, plot_mode: str = 'lines', show_fitting: bool = True):
+                        x_range: tuple = None, plot_mode: str = 'lines', show_fitting: bool = True,
+                        fitting_method: str = 'moving_average', fitting_window: int = 10, poly_degree: int = 3):
     """
     Plot multiple error curves in one chart for comprehensive comparison.
     
@@ -22,6 +24,9 @@ def plot_multiple_errors(df: pd.DataFrame, x_col: str, error_configs: list,
         x_range: tuple of (x_min, x_max) to zoom into specific time range, or None for full range
         plot_mode: 'lines', 'markers', or 'lines+markers'
         show_fitting: Whether to show curve fitting (default: True)
+        fitting_method: 'moving_average' or 'polynomial' (default: 'moving_average')
+        fitting_window: Window size for moving average (default: 10)
+        poly_degree: Polynomial degree for least squares fitting (default: 3)
     
     Returns:
         Plotly Figure object
@@ -65,18 +70,34 @@ def plot_multiple_errors(df: pd.DataFrame, x_col: str, error_configs: list,
             showlegend=True
         ))
         
-        # Add moving average curve if in markers mode and show_fitting is True
+        # Add curve fitting if in markers mode and show_fitting is True
         if 'markers' in plot_mode and show_fitting and len(df) > 5:
-            ma = df[err_col].rolling(window=30, min_periods=1).mean()
+            # 添加滑动平均拟合
+            fitted_ma = _apply_fitting(df, x_col, err_col, 'moving_average', fitting_window, poly_degree)
             fig.add_trace(go.Scatter(
                 x=df[x_col],
-                y=ma,
+                y=fitted_ma,
                 mode='lines',
-                name=f'{err_name} (拟合)',
+                name=f'{err_name} (拟合-滑动平均)',
                 line=dict(color=err_color, width=2, dash='dot'),
                 customdata=custom_data,
                 hovertemplate=hovertemplate_base,
-                showlegend=True
+                showlegend=True,
+                visible=True  # 默认显示
+            ))
+            
+            # 添加 Savitzky-Golay 滤波拟合（更适合误差数据）
+            fitted_savgol = _apply_fitting(df, x_col, err_col, 'savgol', fitting_window, poly_degree)
+            fig.add_trace(go.Scatter(
+                x=df[x_col],
+                y=fitted_savgol,
+                mode='lines',
+                name=f'{err_name} (拟合-SavGol)',
+                line=dict(color=err_color, width=2, dash='dashdot'),
+                customdata=custom_data,
+                hovertemplate=hovertemplate_base,
+                showlegend=True,
+                visible=True  # 默认显示
             ))
     
     # Add bounds if specified
