@@ -550,7 +550,10 @@ def main():
                     '误差 (m)',
                     bounds=(dist_lower, dist_upper),
                     plot_mode=plot_mode,
-                    show_fitting=show_fitting
+                    show_fitting=show_fitting,
+                    fitting_method=fitting_method,
+                    fitting_window=fitting_window,
+                    poly_degree=poly_degree
                 )
                 st.plotly_chart(fig_pos, width='stretch', config={'scrollZoom': False})
                 
@@ -616,7 +619,10 @@ def main():
                     '误差 (deg)',
                     bounds=(dyaw_lower, dyaw_upper),
                     plot_mode=plot_mode,
-                    show_fitting=show_fitting
+                    show_fitting=show_fitting,
+                    fitting_method=fitting_method,
+                    fitting_window=fitting_window,
+                    poly_degree=poly_degree
                 )
                 st.plotly_chart(fig_angle, width='stretch', config={'scrollZoom': False})
                 
@@ -669,7 +675,10 @@ def main():
                     '误差 (m)',
                     bounds=(dist_lower, dist_upper),
                     plot_mode=plot_mode,
-                    show_fitting=show_fitting
+                    show_fitting=show_fitting,
+                    fitting_method=fitting_method,
+                    fitting_window=fitting_window,
+                    poly_degree=poly_degree
                 )
                 st.plotly_chart(fig_dist_combined, width='stretch', config={'scrollZoom': False})
                 
