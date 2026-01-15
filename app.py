@@ -195,7 +195,7 @@ def main():
                 # Curve fitting toggle
                 show_fitting = st.toggle(
                     "显示曲线拟合", 
-                    value=True, 
+                    value=False, 
                     help="同时显示滑动平均和SavGol滤波拟合（更适合误差数据）"
                 )
                 
@@ -296,54 +296,54 @@ def main():
                 st.markdown("**直接距离误差 (m)**")
                 col_d1, col_d2 = st.columns(2)
                 with col_d1:
-                    st.number_input("下限", step=0.1, format="%.1f", key="dist_lower")
+                    st.number_input("下限", step=0.1, format="%.1f", value=st.session_state.dist_lower, key="dist_lower")
                 with col_d2:
-                    st.number_input("上限", step=0.1, format="%.1f", key="dist_upper")
+                    st.number_input("上限", step=0.1, format="%.1f", value=st.session_state.dist_upper, key="dist_upper")
                 dist_lower = st.session_state.dist_lower
                 dist_upper = st.session_state.dist_upper
                 
                 st.markdown("**侧向误差 (m)**")
                 col_l1, col_l2 = st.columns(2)
                 with col_l1:
-                    st.number_input("下限", step=0.1, format="%.1f", key="lat_lower")
+                    st.number_input("下限", step=0.1, format="%.1f", value=st.session_state.lat_lower, key="lat_lower")
                 with col_l2:
-                    st.number_input("上限", step=0.1, format="%.1f", key="lat_upper")
+                    st.number_input("上限", step=0.1, format="%.1f", value=st.session_state.lat_upper, key="lat_upper")
                 lat_lower = st.session_state.lat_lower
                 lat_upper = st.session_state.lat_upper
                 
                 st.markdown("**纵向误差 (m)**")
                 col_ln1, col_ln2 = st.columns(2)
                 with col_ln1:
-                    st.number_input("下限", step=0.1, format="%.1f", key="lon_lower")
+                    st.number_input("下限", step=0.1, format="%.1f", value=st.session_state.lon_lower, key="lon_lower")
                 with col_ln2:
-                    st.number_input("上限", step=0.1, format="%.1f", key="lon_upper")
+                    st.number_input("上限", step=0.1, format="%.1f", value=st.session_state.lon_upper, key="lon_upper")
                 lon_lower = st.session_state.lon_lower
                 lon_upper = st.session_state.lon_upper
                 
                 st.markdown("**高度误差 (m)**")
                 col_h1, col_h2 = st.columns(2)
                 with col_h1:
-                    st.number_input("下限", step=0.1, format="%.1f", key="height_lower")
+                    st.number_input("下限", step=0.1, format="%.1f", value=st.session_state.height_lower, key="height_lower")
                 with col_h2:
-                    st.number_input("上限", step=0.1, format="%.1f", key="height_upper")
+                    st.number_input("上限", step=0.1, format="%.1f", value=st.session_state.height_upper, key="height_upper")
                 height_lower = st.session_state.height_lower
                 height_upper = st.session_state.height_upper
                 
                 st.markdown("**偏航光轴偏差角 (deg)**")
                 col_yaw1, col_yaw2 = st.columns(2)
                 with col_yaw1:
-                    st.number_input("下限", step=0.1, format="%.1f", key="dyaw_lower")
+                    st.number_input("下限", step=0.1, format="%.1f", value=st.session_state.dyaw_lower, key="dyaw_lower")
                 with col_yaw2:
-                    st.number_input("上限", step=0.1, format="%.1f", key="dyaw_upper")
+                    st.number_input("上限", step=0.1, format="%.1f", value=st.session_state.dyaw_upper, key="dyaw_upper")
                 dyaw_lower = st.session_state.dyaw_lower
                 dyaw_upper = st.session_state.dyaw_upper
                 
                 st.markdown("**俯仰光轴偏差角 (deg)**")
                 col_pitch1, col_pitch2 = st.columns(2)
                 with col_pitch1:
-                    st.number_input("下限", step=0.1, format="%.1f", key="dpitch_lower")
+                    st.number_input("下限", step=0.1, format="%.1f", value=st.session_state.dpitch_lower, key="dpitch_lower")
                 with col_pitch2:
-                    st.number_input("上限", step=0.1, format="%.1f", key="dpitch_upper")
+                    st.number_input("上限", step=0.1, format="%.1f", value=st.session_state.dpitch_upper, key="dpitch_upper")
                 dpitch_lower = st.session_state.dpitch_lower
                 dpitch_upper = st.session_state.dpitch_upper
 
@@ -359,7 +359,7 @@ def main():
                 # Filter out low confidence or zero distance points
                 # Ensure we don't crash if columns are missing, though processor guarantees them
                 if 'algo_confidence' in filtered_df.columns:
-                    mask = (filtered_df['algo_confidence'] > 0.5) & (filtered_df['algo_distance'] > 0.1)
+                    mask = (filtered_df['algo_confidence'] > 0.85) & (filtered_df['algo_distance'] > 0.1)
                     filtered_df = filtered_df[mask]
                 filtered_len = len(filtered_df)
                 if initial_len > filtered_len:
