@@ -624,7 +624,7 @@ def main():
                     filtered_df, 
                     'timestamp', 
                     distance_error_configs,
-                    '直接距离误差（实际值 - 理论值）', 
+                    '距离误差（实际值 - 理论值）', 
                     '误差 (m)',
                     bounds=(dist_lower, dist_upper),
                     plot_mode=plot_mode,
