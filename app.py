@@ -275,10 +275,14 @@ def main():
                 distance_presets = [3.0, 2.0, 1.6, 1.0, 0.5, 0.2]
                 for idx, preset_val in enumerate(distance_presets):
                     with preset_cols_dist[idx]:
-                        st.button(f"±{preset_val}", key=f"dist_preset_{preset_val}", 
-                                   help=f"设置所有直接距离误差为 ±{preset_val}m", 
-                                   on_click=set_distance_preset, args=(preset_val,),
-                                   width='stretch')
+                        st.button(
+                            f"±{preset_val}",
+                            key=f"dist_preset_{preset_val}",
+                            help=f"设置所有直接距离误差为 ±{preset_val}m",
+                            on_click=set_distance_preset,
+                            args=(preset_val,),
+                            use_container_width=True,
+                        )
                 
                 # Angle error presets - second row
                 st.caption("角度误差 (deg)")
@@ -286,10 +290,14 @@ def main():
                 angle_presets = [4.0, 3.0, 2.0, 1.5, 1.0, 0.5]
                 for idx, preset_val in enumerate(angle_presets):
                     with preset_cols_angle[idx]:
-                        st.button(f"±{preset_val}", key=f"angle_preset_{preset_val}", 
-                                   help=f"设置所有角度误差为 ±{preset_val}°", 
-                                   on_click=set_angle_preset, args=(preset_val,),
-                                   width='stretch')
+                        st.button(
+                            f"±{preset_val}",
+                            key=f"angle_preset_{preset_val}",
+                            help=f"设置所有角度误差为 ±{preset_val}°",
+                            on_click=set_angle_preset,
+                            args=(preset_val,),
+                            use_container_width=True,
+                        )
                 
                 st.divider()
                 
@@ -508,7 +516,7 @@ def main():
                     fitting_window=fitting_window,
                     poly_degree=poly_degree
                 )
-                st.plotly_chart(fig_pos, width='stretch', config={'scrollZoom': False})
+                st.plotly_chart(fig_pos, use_container_width=True, config={'scrollZoom': False})
                 
                 # 位置误差统计表格
                 st.markdown("#### 📊 位置误差统计汇总")
@@ -550,7 +558,7 @@ def main():
                     ],
                 }
                 error_stats_df = pd.DataFrame(error_stats_data)
-                st.dataframe(error_stats_df, width='stretch', hide_index=True)
+                st.dataframe(error_stats_df, use_container_width=True, hide_index=True)
                 
                 st.divider()
                 
@@ -577,7 +585,7 @@ def main():
                     fitting_window=fitting_window,
                     poly_degree=poly_degree
                 )
-                st.plotly_chart(fig_angle, width='stretch', config={'scrollZoom': False})
+                st.plotly_chart(fig_angle, use_container_width=True, config={'scrollZoom': False})
                 
                 # 角度误差统计表格
                 st.markdown("#### 📊 角度误差统计汇总")
@@ -604,14 +612,14 @@ def main():
                     ],
                 }
                 angle_error_stats_df = pd.DataFrame(angle_error_stats_data)
-                st.dataframe(angle_error_stats_df, width='stretch', hide_index=True)
+                st.dataframe(angle_error_stats_df, use_container_width=True, hide_index=True)
             
             with tab1:
                 st.subheader("距离分析")
                 fig1 = plot_comparison(filtered_df, 'timestamp', 'gt_distance', 'algo_distance', 
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)', 
                                      '理论值与实际值距离对比', '距离 (m)', plot_mode=plot_mode, show_fitting=show_fitting, fitting_method=fitting_method, fitting_window=fitting_window, poly_degree=poly_degree)
-                st.plotly_chart(fig1, width='stretch', config={'scrollZoom': False})
+                st.plotly_chart(fig1, use_container_width=True, config={'scrollZoom': False})
                 
                 # 合并距离误差和分量合成误差到一个图表
                 distance_error_configs = [
@@ -633,7 +641,7 @@ def main():
                     fitting_window=fitting_window,
                     poly_degree=poly_degree
                 )
-                st.plotly_chart(fig_dist_combined, width='stretch', config={'scrollZoom': False})
+                st.plotly_chart(fig_dist_combined, use_container_width=True, config={'scrollZoom': False})
                 
                 # 统计指标显示
                 st.markdown("#### 📊 误差统计指标")
@@ -666,11 +674,11 @@ def main():
                 fig3 = plot_comparison(filtered_df, 'timestamp', 'gt_lateral', 'algo_lateral',
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)',
                                      '理论值与实际值侧向对比', '侧向距离 (m)', plot_mode=plot_mode, show_fitting=show_fitting, fitting_method=fitting_method, fitting_window=fitting_window, poly_degree=poly_degree)
-                st.plotly_chart(fig3, width='stretch', config={'scrollZoom': False})
+                st.plotly_chart(fig3, use_container_width=True, config={'scrollZoom': False})
                 
                 fig4 = plot_error(filtered_df, 'timestamp', 'lateral_error',
                                 '侧向误差（实际值 - 理论值）', '误差 (m)', bounds=(lat_lower, lat_upper), plot_mode=plot_mode, show_fitting=show_fitting, fitting_method=fitting_method, fitting_window=fitting_window, poly_degree=poly_degree)
-                st.plotly_chart(fig4, width='stretch', config={'scrollZoom': False})
+                st.plotly_chart(fig4, use_container_width=True, config={'scrollZoom': False})
                 
                 # 统计指标显示
                 st.markdown("#### 📊 误差统计指标")
@@ -689,11 +697,11 @@ def main():
                 fig5 = plot_comparison(filtered_df, 'timestamp', 'gt_longitudinal', 'algo_longitudinal',
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)',
                                      '理论值与实际值纵向对比', '纵向距离 (m)', plot_mode=plot_mode, show_fitting=show_fitting, fitting_method=fitting_method, fitting_window=fitting_window, poly_degree=poly_degree)
-                st.plotly_chart(fig5, width='stretch', config={'scrollZoom': False})
+                st.plotly_chart(fig5, use_container_width=True, config={'scrollZoom': False})
                 
                 fig6 = plot_error(filtered_df, 'timestamp', 'longitudinal_error',
                                 '纵向误差（实际值 - 理论值）', '误差 (m)', bounds=(lon_lower, lon_upper), plot_mode=plot_mode, show_fitting=show_fitting, fitting_method=fitting_method, fitting_window=fitting_window, poly_degree=poly_degree)
-                st.plotly_chart(fig6, width='stretch', config={'scrollZoom': False})
+                st.plotly_chart(fig6, use_container_width=True, config={'scrollZoom': False})
                 
                 # 统计指标显示
                 st.markdown("#### 📊 误差统计指标")
@@ -712,11 +720,11 @@ def main():
                 fig7 = plot_comparison(filtered_df, 'timestamp', 'gt_height', 'algo_height',
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)',
                                      '理论值与实际值高度对比', '高度 (m)', plot_mode=plot_mode, show_fitting=show_fitting, fitting_method=fitting_method, fitting_window=fitting_window, poly_degree=poly_degree)
-                st.plotly_chart(fig7, width='stretch', config={'scrollZoom': False})
+                st.plotly_chart(fig7, use_container_width=True, config={'scrollZoom': False})
                 
                 fig8 = plot_error(filtered_df, 'timestamp', 'height_error',
                                 '高度误差（实际值 - 理论值）', '误差 (m)', bounds=(height_lower, height_upper), plot_mode=plot_mode, show_fitting=show_fitting, fitting_method=fitting_method, fitting_window=fitting_window, poly_degree=poly_degree)
-                st.plotly_chart(fig8, width='stretch', config={'scrollZoom': False})
+                st.plotly_chart(fig8, use_container_width=True, config={'scrollZoom': False})
                 
                 # 统计指标显示
                 st.markdown("#### 📊 误差统计指标")
@@ -738,12 +746,12 @@ def main():
                 fig9 = plot_comparison(filtered_df, 'timestamp', 'gt_dyaw', 'algo_dyaw',
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)',
                                      '理论值与实际值偏航光轴偏差角对比', '偏差角 (deg)', plot_mode=plot_mode, show_fitting=show_fitting, fitting_method=fitting_method, fitting_window=fitting_window, poly_degree=poly_degree)
-                st.plotly_chart(fig9, width='stretch', config={'scrollZoom': False})
+                st.plotly_chart(fig9, use_container_width=True, config={'scrollZoom': False})
                 
                 # 显示误差图
                 fig9_err = plot_error(filtered_df, 'timestamp', 'dyaw_error',
                                 '偏航光轴偏差角误差（实际值 - 理论值）', '误差 (deg)', bounds=(dyaw_lower, dyaw_upper), plot_mode=plot_mode, show_fitting=show_fitting, fitting_method=fitting_method, fitting_window=fitting_window, poly_degree=poly_degree)
-                st.plotly_chart(fig9_err, width='stretch', config={'scrollZoom': False})
+                st.plotly_chart(fig9_err, use_container_width=True, config={'scrollZoom': False})
                 
                 # 统计指标显示
                 st.markdown("#### 📊 误差统计指标")
@@ -765,12 +773,12 @@ def main():
                 fig10 = plot_comparison(filtered_df, 'timestamp', 'gt_dpitch', 'algo_dpitch',
                                      '理论值 (Ground Truth)', '实际值 (Algorithm)',
                                      '理论值与实际值俯仰光轴偏差角对比', '偏差角 (deg)', plot_mode=plot_mode, show_fitting=show_fitting, fitting_method=fitting_method, fitting_window=fitting_window, poly_degree=poly_degree)
-                st.plotly_chart(fig10, width='stretch', config={'scrollZoom': False})
+                st.plotly_chart(fig10, use_container_width=True, config={'scrollZoom': False})
                 
                 # 显示误差图
                 fig10_err = plot_error(filtered_df, 'timestamp', 'dpitch_error',
                                  '俯仰光轴偏差角误差（实际值 - 理论值）', '误差 (deg)', bounds=(dpitch_lower, dpitch_upper), plot_mode=plot_mode, show_fitting=show_fitting, fitting_method=fitting_method, fitting_window=fitting_window, poly_degree=poly_degree)
-                st.plotly_chart(fig10_err, width='stretch', config={'scrollZoom': False})
+                st.plotly_chart(fig10_err, use_container_width=True, config={'scrollZoom': False})
 
                 # 统计指标显示
                 st.markdown("#### 📊 误差统计指标")
@@ -954,7 +962,7 @@ def main():
                 styled_df = styled_df.format(format_dict)
                 
                 # 显示表格
-                st.dataframe(styled_df, width='stretch', height=600)
+                st.dataframe(styled_df, use_container_width=True, height=600)
                 
                 # 字段说明
                 st.markdown("---")
