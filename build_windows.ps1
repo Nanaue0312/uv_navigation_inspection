@@ -6,7 +6,7 @@ Write-Host "开始 Windows 平台打包..." -ForegroundColor Green
 # 检查是否安装了 PyInstaller
 if (-not (Get-Command pyinstaller -ErrorAction SilentlyContinue)) {
     Write-Host "未找到 PyInstaller，正在安装..." -ForegroundColor Yellow
-    pip install pyinstaller
+    uv run pip install pyinstaller
 }
 
 # 清理之前的构建
@@ -24,7 +24,7 @@ Write-Host "正在使用 PyInstaller 打包..." -ForegroundColor Cyan
 
 # PyInstaller 打包命令
 # 注意：Streamlit 需要特殊处理
-pyinstaller --onefile `
+uv run pyinstaller --onefile `
     --name uv_navigation_inspection `
     --add-data "app.py;." `
     --add-data "src;src" `
@@ -35,6 +35,8 @@ pyinstaller --onefile `
     --hidden-import plotly.graph_objs `
     --hidden-import pandas `
     --hidden-import numpy `
+    --hidden-import scipy `
+    --hidden-import scipy.signal `
     --hidden-import matplotlib `
     --hidden-import matplotlib.pyplot `
     --hidden-import seaborn `
@@ -43,6 +45,7 @@ pyinstaller --onefile `
     --collect-all streamlit `
     --copy-metadata streamlit `
     --copy-metadata plotly `
+    --collect-all scipy `
     run_app.py
 
 if ($LASTEXITCODE -eq 0) {
